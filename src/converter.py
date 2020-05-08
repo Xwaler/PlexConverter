@@ -1,8 +1,6 @@
 import os
-import sys
-import time
-import traceback
 import shlex
+import time
 from configparser import ConfigParser
 from subprocess import check_call, CalledProcessError
 
@@ -31,6 +29,10 @@ class PlexConverter:
 
         self.sftp_url = f'{config["SSH"]["USER"]}@{config["PLEX"]["URL"]}'
 
+        self.max_video_width = config['CONVERTION'].getint('MAX_VIDEO_WIDTH')
+        self.avg_bitrate = config['CONVERTION'].getint('AVERAGE_BITRATE')
+        self.max_bitrate = config['CONVERTION'].getint('MAX_BITRATE')
+
     def getPendingItems(self):
         files = os.listdir(self.CONVERTING_FOLDER)
         if files:
@@ -58,9 +60,9 @@ class PlexConverter:
 
         if item.needVideoConvert():
             command = f'ffmpeg -v warning -stats -i "{input_path}" -movflags fastart -map 0 ' \
-                      '-pix_fmt yuv420p -filter:v scale=1280:-2 -sws_flags lanczos ' \
-                      f'{video_options} -profile:v high -level:v 4.1 -qmin 16 ' \
-                      '-b:v 1100k -maxrate:v 1300k -bufsize 2600k ' \
+                      f'-pix_fmt yuv420p -filter:v scale={min(item.video_resolution[1], self.max_video_width)}:-2 ' \
+                      f'-sws_flags lanczos {video_options} -profile:v high -level:v 4.1 -qmin 16 ' \
+                      f'-b:v {self.avg_bitrate}k -maxrate:v {self.max_bitrate}k -bufsize {2 * self.avg_bitrate}k ' \
                       f'-c:a aac -ac 2 -c:s srt "{output_path}"'
 
         elif item.needAudioConvert():
@@ -101,7 +103,7 @@ class PlexConverter:
 
     def ready(self, item):
         return os.path.exists(os.path.join(self.OUTPUT_FOLDER, item.local_file)) and \
-                    os.path.getsize(os.path.join(self.OUTPUT_FOLDER, item.local_file)) > 1_000
+               os.path.getsize(os.path.join(self.OUTPUT_FOLDER, item.local_file)) > 1_000
 
     def upload(self, item):
         print(f'--- Uploading {item.name} ---')
@@ -165,4 +167,3 @@ class PlexConverter:
 if __name__ == '__main__':
     converter = PlexConverter()
     converter.run()
-

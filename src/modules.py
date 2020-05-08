@@ -1,6 +1,6 @@
 import os
-from difflib import SequenceMatcher
 from configparser import ConfigParser
+from difflib import SequenceMatcher
 
 from bs4 import BeautifulSoup
 from requests import get, session
@@ -9,11 +9,13 @@ config = ConfigParser()
 config.read('config.ini')
 
 TEMP_FOLDER = config['FOLDERS']['TEMP']
+MAX_VIDEO_WIDTH = config['CONVERTION'].getint('MAX_VIDEO_WIDTH')
+MAX_BITRATE = config['CONVERTION'].getint('MAX_BITRATE')
 
 
 def escape(string):
     for char in [' ', ',', ';', ':', '(', ')', '[', ']', '{', '}']:
-         string = string.replace(char, '\\' + char)
+        string = string.replace(char, '\\' + char)
     return string
 
 
@@ -48,11 +50,11 @@ class Item:
         if self.audio_channels != '2':
             self.reasons['Audio channels'] = self.audio_channels
 
-        if self.bitrate > 1600:
+        if self.bitrate > MAX_BITRATE:
             self.reasons['High bitrate'] = {'Bitrate': self.bitrate,
                                             'Resolution': self.video_resolution}
 
-        elif self.video_resolution[1] < 1280:
+        elif self.video_resolution[1] < MAX_VIDEO_WIDTH:
             self.reasons['Low resolution'] = self.video_resolution
 
         if self.container != 'mkv':

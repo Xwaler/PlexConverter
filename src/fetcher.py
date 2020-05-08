@@ -1,15 +1,14 @@
 import os
+import shlex
 import sys
 import time
-import traceback
 from configparser import ConfigParser
 from subprocess import check_call, CalledProcessError
 
+from modules import RemoteItem, Library, escape
 from requests import get
 from requests.exceptions import ConnectionError
 from xmltodict import parse
-
-from modules import RemoteItem, Library, escape
 
 
 class PlexFetcher:
@@ -89,14 +88,13 @@ class PlexFetcher:
     def getPendingItems(self, library):
         return [item for item in self.getItems(library) if item.reasons and item.canBeCorrected()]
 
-
     def download(self, item):
         print(f'--- Downloading {item.name} ---')
         path = os.path.join(self.sftp_base_path, item.remote_directory[1:], item.remote_file)
-        command = ['scp', escape(self.sftp_url) + ':' + escape(path), escape(self.TEMP_FOLDER)]
+        command = f'scp {escape(self.sftp_url)}:{escape(path), escape(self.TEMP_FOLDER)}'
 
         try:
-            check_call(command)
+            check_call(shlex.split(command))
 
             with open(os.path.join(self.TEMP_FOLDER, f'{item.local_file}.info'), 'w') as f:
                 f.write(item.remote_path)
@@ -144,4 +142,3 @@ class PlexFetcher:
 if __name__ == '__main__':
     fetcher = PlexFetcher()
     fetcher.run()
-
