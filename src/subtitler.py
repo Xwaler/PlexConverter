@@ -17,6 +17,7 @@ class Subtitler:
         self.TEMP_FOLDER = config['FOLDERS']['TEMP']
         self.EXTRACT_FOLDER = config['FOLDERS']['EXTRACT']
         self.INPUT_FOLDER = config['FOLDERS']['INPUT']
+        self.SUBBED_FOLDER = config['FOLDERS']['SUBBED']
         self.CONVERTING_FOLDER = config['FOLDERS']['CONVERTING']
 
         if not os.path.exists(self.TEMP_FOLDER):
@@ -25,6 +26,8 @@ class Subtitler:
             os.mkdir(self.EXTRACT_FOLDER)
         if not os.path.exists(self.INPUT_FOLDER):
             os.mkdir(self.INPUT_FOLDER)
+        if not os.path.exists(self.SUBBED_FOLDER):
+            os.mkdir(self.SUBBED_FOLDER)
         if not os.path.exists(self.CONVERTING_FOLDER):
             os.mkdir(self.CONVERTING_FOLDER)
 
@@ -199,7 +202,7 @@ class Subtitler:
             check_call(shlex.split(command))
 
             os.rename(output_path,
-                      os.path.join(self.CONVERTING_FOLDER, item.local_file))
+                      os.path.join(self.SUBBED_FOLDER, item.local_file))
             for sub in item.subs_out_file.values():
                 os.remove(os.path.join(self.TEMP_FOLDER, sub))
             os.remove(input_path)
@@ -217,7 +220,7 @@ class Subtitler:
             f.write(os.path.join(self.shared_directory,
                                  input(f'Save in : {os.path.join(self.base_path, self.shared_directory)}'),
                                  item.local_file))
-        local_file = os.path.join(self.CONVERTING_FOLDER, item.local_file)
+        local_file = os.path.join(self.SUBBED_FOLDER, item.local_file)
 
         command_file = 'scp ' \
                        f'{escape(local_file)} ' \
@@ -238,6 +241,10 @@ class Subtitler:
             print('Upload failed !')
             time.sleep(30)
             self.upload(item)
+
+    def prepareForConvertion(self, item):
+        os.rename(os.path.join(self.SUBBED_FOLDER, item.local_file),
+                  os.path.join(self.CONVERTING_FOLDER, item.local_file))
 
     def run(self):
         items = getPendingItems(self.INPUT_FOLDER)
@@ -267,6 +274,8 @@ class Subtitler:
                     self.mux(item)
                     if self.upload_after:
                         self.upload(item)
+                    else:
+                        self.prepareForConvertion(item)
                     items.remove(item)
 
                 else:
