@@ -26,7 +26,8 @@ class PlexConverter:
         if not os.path.exists(self.OUTPUT_FOLDER):
             os.mkdir(self.OUTPUT_FOLDER)
 
-        self.sftp_url = f'{config["SSH"]["USER"]}@{config["PLEX"]["URL"]}'
+        self.base_path = config['SSH']['BASE_PATH']
+        self.ssh = f'{config["SSH"]["USER"]}@{config["PLEX"]["URL"]}'
 
         self.max_video_width = config['CONVERTER'].getint('MAX_VIDEO_WIDTH')
         self.avg_bitrate = config['CONVERTER'].getint('AVERAGE_BITRATE')
@@ -95,7 +96,7 @@ class PlexConverter:
         print(f'--- Uploading {item.name} ---')
         command = 'scp ' \
                   f'{escape(os.path.join(self.OUTPUT_FOLDER, item.local_file))} ' \
-                  f'{escape(self.sftp_url)}:{escape(os.path.join(self.sftp_base_dir, item.remote_directory))}'
+                  f'{escape(self.ssh)}:{escape(os.path.join(self.base_path, item.remote_directory))}'
 
         try:
             check_call(shlex.split(command))

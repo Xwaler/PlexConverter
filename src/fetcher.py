@@ -25,8 +25,8 @@ class PlexFetcher:
 
         self.plex_token = config['PLEX']['TOKEN']
         self.plex_url = f'http://{config["PLEX"]["URL"]}:{config["PLEX"]["PORT"]}'
-        self.sftp_url = f'{config["SSH"]["USER"]}@{config["PLEX"]["URL"]}'
-        self.sftp_base_path = config["SSH"]["BASE_PATH"]
+        self.ssh = f'{config["SSH"]["USER"]}@{config["PLEX"]["URL"]}'
+        self.base_path = config["SSH"]["BASE_PATH"]
 
     def get_wrapper(self, url):
         failed = False
@@ -94,8 +94,8 @@ class PlexFetcher:
 
     def download(self, item):
         print(f'--- Downloading {item.name} ---')
-        path = os.path.join(self.sftp_base_path, item.remote_directory[1:], item.remote_file)
-        command = f'scp {escape(self.sftp_url)}:{escape(path)} {escape(self.TEMP_FOLDER)}'
+        path = os.path.join(self.base_path, item.remote_directory[1:], item.remote_file)
+        command = f'scp {escape(self.ssh)}:{escape(path)} {escape(self.TEMP_FOLDER)}'
 
         try:
             check_call(shlex.split(command))

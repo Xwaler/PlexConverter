@@ -156,7 +156,7 @@ class LocalItem(Item):
     def getRemotePath(self):
         for file in os.listdir(TEMP_FOLDER):
             if file == self.local_file + '.info':
-                self.remote_path = open(os.path.join(TEMP_FOLDER, file), 'r').readline()
+                self.remote_path = open(os.path.join(TEMP_FOLDER, file), 'r', encoding='utf-8').readline()
                 self.remote_directory, self.remote_file = self.remote_path.rsplit('/', 1)
                 self.remote_directory += '/'
                 return
