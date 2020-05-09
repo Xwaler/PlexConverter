@@ -1,9 +1,10 @@
 import os
-import psutil
 from configparser import ConfigParser
 from difflib import SequenceMatcher
 
+import psutil
 from bs4 import BeautifulSoup
+from ffprobe_wrapper import FFProbe
 from requests import get, session
 
 config = ConfigParser()

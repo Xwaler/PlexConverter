@@ -1,4 +1,5 @@
-bs4
+# ffmpeg (sudo apt install ffmpeg)
+requests
 xmltodict
 psutil
-# ffmpeg (sudo apt install ffmpeg)
+bs4

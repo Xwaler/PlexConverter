@@ -1,14 +1,12 @@
 import os
-import time
 import shlex
-from requests import get
+import time
+import zipfile
 from configparser import ConfigParser
 from subprocess import check_call, CalledProcessError
 
-import zipfile
-
-from modules import LocalItem, getPendingItems, getNewItems
-from ffprobe_wrapper import FFProbe
+from modules import escape, getPendingItems, getNewItems
+from requests import get
 
 
 class Subtitler:
@@ -215,18 +213,18 @@ class Subtitler:
         print(f'--- Uploading {item.name} ---')
 
         info_file = f'{os.path.join(self.TEMP_FOLDER, item.local_file)}.info'
-        with open(info_file, 'w') as f:
+        with open(info_file, 'w', encoding='utf-8') as f:
             f.write(os.path.join(self.shared_directory,
-                                 input(f'Save in : ({os.path.join(self.base_path, self.shared_directory)}..)'),
+                                 input(f'Save in : {os.path.join(self.base_path, self.shared_directory)}'),
                                  item.local_file))
         local_file = os.path.join(self.CONVERTING_FOLDER, item.local_file)
 
-        command_file = 'scp' \
-                       f'{escape(local_file)}' \
+        command_file = 'scp ' \
+                       f'{escape(local_file)} ' \
                        f'{escape(self.upload_ssh)}:{escape(os.path.join(self.upload_dir, self.CONVERTING_FOLDER))}'
 
-        command_info = 'scp' \
-                       f'{escape(info_file)}' \
+        command_info = 'scp ' \
+                       f'{escape(info_file)} ' \
                        f'{escape(self.upload_ssh)}:{escape(os.path.join(self.upload_dir, self.TEMP_FOLDER))}'
 
         try:

@@ -4,8 +4,7 @@ import time
 from configparser import ConfigParser
 from subprocess import check_call, CalledProcessError
 
-from ffprobe_wrapper import FFProbe
-from modules import LocalItem, escape, getPendingItems, getNewItems
+from modules import escape, getPendingItems, getNewItems
 
 
 class PlexConverter:
@@ -94,8 +93,8 @@ class PlexConverter:
 
     def upload(self, item):
         print(f'--- Uploading {item.name} ---')
-        command = 'scp' \
-                  f'{escape(os.path.join(self.OUTPUT_FOLDER, item.local_file))}' \
+        command = 'scp ' \
+                  f'{escape(os.path.join(self.OUTPUT_FOLDER, item.local_file))} ' \
                   f'{escape(self.sftp_url)}:{escape(os.path.join(self.sftp_base_dir, item.remote_directory))}'
 
         try:

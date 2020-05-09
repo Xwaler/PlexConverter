@@ -3,12 +3,11 @@ import shlex
 import time
 from configparser import ConfigParser
 from subprocess import check_call, CalledProcessError
-from requests import get
-from requests.exceptions import ConnectionError
-
-from xmltodict import parse
 
 from modules import RemoteItem, Library, escape
+from requests import get
+from requests.exceptions import ConnectionError
+from xmltodict import parse
 
 
 class PlexFetcher:
@@ -96,7 +95,7 @@ class PlexFetcher:
     def download(self, item):
         print(f'--- Downloading {item.name} ---')
         path = os.path.join(self.sftp_base_path, item.remote_directory[1:], item.remote_file)
-        command = f'scp {escape(self.sftp_url)}:{escape(path), escape(self.TEMP_FOLDER)}'
+        command = f'scp {escape(self.sftp_url)}:{escape(path)} {escape(self.TEMP_FOLDER)}'
 
         try:
             check_call(shlex.split(command))
