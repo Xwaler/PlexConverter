@@ -1,4 +1,5 @@
 import os
+import psutil
 from configparser import ConfigParser
 from difflib import SequenceMatcher
 
@@ -9,14 +10,47 @@ config = ConfigParser()
 config.read('config.ini')
 
 TEMP_FOLDER = config['FOLDERS']['TEMP']
-MAX_VIDEO_WIDTH = config['CONVERTION'].getint('MAX_VIDEO_WIDTH')
-MAX_BITRATE = config['CONVERTION'].getint('MAX_BITRATE')
+MAX_VIDEO_WIDTH = config['CONVERTER'].getint('MAX_VIDEO_WIDTH')
+MAX_BITRATE = config['CONVERTER'].getint('MAX_BITRATE')
 
 
 def escape(string):
     for char in [' ', ',', ';', ':', '(', ')', '[', ']', '{', '}']:
         string = string.replace(char, '\\' + char)
     return string
+
+
+def has_handle(path):
+    fpath = os.path.abspath(path)
+    for proc in psutil.process_iter():
+        try:
+            for item in proc.open_files():
+                if fpath == item.path:
+                    return True
+        except Exception as _:
+            pass
+    return False
+
+
+def getPendingItems(folder):
+    files = os.listdir(folder)
+    items = []
+    for f in files:
+        path = os.path.join(folder, f)
+        while has_handle(path):
+            pass
+        items.append(LocalItem(FFProbe(path)))
+    return items
+
+
+def getNewItems(folder, items):
+    files = [file for file in os.listdir(folder) if file not in [item.local_file for item in items]]
+
+    for f in files:
+        path = os.path.join(folder, f)
+        while has_handle(path):
+            pass
+        items.append(LocalItem(FFProbe(path)))
 
 
 class Item:

@@ -1,14 +1,14 @@
 import os
 import shlex
-import sys
 import time
 from configparser import ConfigParser
 from subprocess import check_call, CalledProcessError
-
-from modules import RemoteItem, Library, escape
 from requests import get
 from requests.exceptions import ConnectionError
+
 from xmltodict import parse
+
+from modules import RemoteItem, Library, escape
 
 
 class PlexFetcher:
@@ -41,16 +41,13 @@ class PlexFetcher:
 
             except ConnectionError:
                 if failed:
-                    print('.', end='')
+                    print('.', end='', flush=True)
                 else:
-                    print('Failed to get response.', end='')
-                sys.stdout.flush()
+                    print('Failed to get response.', end='', flush=True)
                 failed = True
                 time.sleep(3)
 
     def getLibraries(self):
-        print('--- Fetching libraries ---')
-
         response = self.get_wrapper(
             f'{self.plex_url}/library/sections',
         )
@@ -86,7 +83,15 @@ class PlexFetcher:
         return parsed_items
 
     def getPendingItems(self, library):
-        return [item for item in self.getItems(library) if item.reasons and item.canBeCorrected()]
+        all_items = self.getItems(library)
+        pending_items, n_cant_correct = [], 0
+        for item in all_items:
+            if item.reasons:
+                if item.canBeCorrected():
+                    pending_items.append(item)
+                else:
+                    n_cant_correct += 1
+        return pending_items, n_cant_correct, len(all_items)
 
     def download(self, item):
         print(f'--- Downloading {item.name} ---')
@@ -116,14 +121,18 @@ class PlexFetcher:
     def run(self):
         done = []
         while True:
-            for library in self.getLibraries():
-                print(f'--- Analysing library {library.name} ---')
+            print(f'\n--- Fetching libraries --- ({time.strftime("%X", time.localtime())})')
 
-                items = [item for item in self.getPendingItems(library)
+            for library in self.getLibraries():
+                print(f'Library {library.name}: ', end='', flush=True)
+
+                pending_items, cant_be_corrected, count_items = self.getPendingItems(library)
+                items = [item for item in pending_items
                          if item not in done and self.notDownloaded(item)]
                 size = len(items)
                 i = 0
 
+                print(f'{len(pending_items)} pending, {cant_be_corrected} can\'t be corrected, {count_items} total')
                 for item in items:
                     print(f'Entry {i + 1}/{size}\n{item}')
 
@@ -136,7 +145,7 @@ class PlexFetcher:
                     done.append(item)
                     i += 1
 
-            time.sleep(120)
+            time.sleep(150)
 
 
 if __name__ == '__main__':

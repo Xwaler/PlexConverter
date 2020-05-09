@@ -5,7 +5,7 @@ from configparser import ConfigParser
 from subprocess import check_call, CalledProcessError
 
 from ffprobe_wrapper import FFProbe
-from modules import LocalItem, escape
+from modules import LocalItem, escape, getPendingItems, getNewItems
 
 
 class PlexConverter:
@@ -29,22 +29,9 @@ class PlexConverter:
 
         self.sftp_url = f'{config["SSH"]["USER"]}@{config["PLEX"]["URL"]}'
 
-        self.max_video_width = config['CONVERTION'].getint('MAX_VIDEO_WIDTH')
-        self.avg_bitrate = config['CONVERTION'].getint('AVERAGE_BITRATE')
-        self.max_bitrate = config['CONVERTION'].getint('MAX_BITRATE')
-
-    def getPendingItems(self):
-        files = os.listdir(self.CONVERTING_FOLDER)
-        if files:
-            time.sleep(2)
-            return [LocalItem(FFProbe(os.path.join(self.CONVERTING_FOLDER, f))) for f in files]
-        return []
-
-    def getNewItems(self, items):
-        files = [file for file in os.listdir(self.CONVERTING_FOLDER) if file not in [item.local_file for item in items]]
-        if files:
-            time.sleep(3)
-            items.extend(LocalItem(FFProbe(os.path.join(self.CONVERTING_FOLDER, f))) for f in files)
+        self.max_video_width = config['CONVERTER'].getint('MAX_VIDEO_WIDTH')
+        self.avg_bitrate = config['CONVERTER'].getint('AVERAGE_BITRATE')
+        self.max_bitrate = config['CONVERTER'].getint('MAX_BITRATE')
 
     def notConverted(self, item):
         return not os.path.exists(os.path.join(self.NORMALIZING_FOLDER, item.local_file))
@@ -129,7 +116,7 @@ class PlexConverter:
             os.remove(info)
 
     def run(self):
-        items = self.getPendingItems()
+        items = getPendingItems(self.CONVERTING_FOLDER)
 
         while True:
             while items:
@@ -155,13 +142,13 @@ class PlexConverter:
                 else:
                     print('Failed !')
 
-            self.getNewItems(items)
+            getNewItems(self.CONVERTING_FOLDER, items)
             if not items:
                 print('\nWaiting for new files...')
 
             while not items:
                 time.sleep(1)
-                self.getNewItems(items)
+                getNewItems(self.CONVERTING_FOLDER, items)
 
 
 if __name__ == '__main__':
