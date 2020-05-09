@@ -221,11 +221,11 @@ class Subtitler:
 
         command_file = 'scp ' \
                        f'{escape(local_file)} ' \
-                       f'{escape(self.upload_ssh)}:{escape(os.path.join(self.upload_dir, self.CONVERTING_FOLDER))}'
+                       f'{escape(self.upload_ssh)}:"{escape(os.path.join(self.upload_dir, self.CONVERTING_FOLDER))}"'
 
         command_info = 'scp ' \
                        f'{escape(info_file)} ' \
-                       f'{escape(self.upload_ssh)}:{escape(os.path.join(self.upload_dir, self.TEMP_FOLDER))}'
+                       f'{escape(self.upload_ssh)}:"{escape(os.path.join(self.upload_dir, self.TEMP_FOLDER))}"'
 
         try:
             check_call(shlex.split(command_info))
