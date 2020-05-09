@@ -30,6 +30,9 @@ class Subtitler:
         if not os.path.exists(self.CONVERTING_FOLDER):
             os.mkdir(self.CONVERTING_FOLDER)
 
+        self.base_path = config['SSH']['BASE_PATH']
+        self.shared_directory = config['PLEX']['SHARED_DIRECTORY']
+
         self.player = config['SUBTITLER']['PLAYER']
         self.upload_after = config['SUBTITLER'].getboolean('UPLOAD_AFTER')
         self.upload_ssh = f'{config["SUBTITLER"]["USER"]}@{config["SUBTITLER"]["URL"]}'
@@ -210,12 +213,28 @@ class Subtitler:
 
     def upload(self, item):
         print(f'--- Uploading {item.name} ---')
-        command = 'scp' \
-                  f'{escape(os.path.join(self.CONVERTING_FOLDER, item.local_file))}' \
-                  f'{escape(self.upload_ssh)}:{escape(self.upload_dir)}'
+
+        info_file = f'{os.path.join(self.TEMP_FOLDER, item.local_file)}.info'
+        with open(info_file, 'w') as f:
+            f.write(os.path.join(self.shared_directory,
+                                 input(f'Save in : ({os.path.join(self.base_path, self.shared_directory)}..)'),
+                                 item.local_file))
+        local_file = os.path.join(self.CONVERTING_FOLDER, item.local_file)
+
+        command_file = 'scp' \
+                       f'{escape(local_file)}' \
+                       f'{escape(self.upload_ssh)}:{escape(os.path.join(self.upload_dir, self.CONVERTING_FOLDER))}'
+
+        command_info = 'scp' \
+                       f'{escape(info_file)}' \
+                       f'{escape(self.upload_ssh)}:{escape(os.path.join(self.upload_dir, self.TEMP_FOLDER))}'
 
         try:
-            check_call(shlex.split(command))
+            check_call(shlex.split(command_info))
+            check_call(shlex.split(command_file))
+
+            os.remove(local_file)
+            os.remove(info_file)
 
         except CalledProcessError:
             print('Upload failed !')
