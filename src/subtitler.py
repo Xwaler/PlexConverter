@@ -174,16 +174,17 @@ class Subtitler:
     def mux(self, item):
         print(f'--- Muxing {item.name} ---')
         input_path = os.path.join(self.INPUT_FOLDER, item.local_file)
-        output_path = os.path.join(self.TEMP_FOLDER, item.local_file)
+        output_file = item.local_file[-3].rsplit('.', 1)[0] + '.mkv'
+        output_path = os.path.join(self.TEMP_FOLDER, output_file)
 
         command = f'ffmpeg -v warning -stats -i "{input_path}" '
 
         for sub in item.subs_out_file.values():
-            command += f'-i "{os.path.join(self.TEMP_FOLDER, sub)}" '
+            command += f'-i {escape(os.path.join(self.TEMP_FOLDER, sub))} '
         command += '-map 0 '
         for i in range(1, len(item.subs_out_file) + 1):
             command += f'-map {i} '
-        command += f'-movflags fastart -c:v copy -c:a copy -c:s srt '
+        command += f'-movflags faststart -c:v copy -c:a copy -c:s srt '
         for language in item.subs_out_file.keys():
             item.max_id += 1
             command += f'-metadata:s:{item.max_id} language={language} '
@@ -196,16 +197,17 @@ class Subtitler:
                     item.audio_languages[audio] = 'fre'
 
             command += f'-metadata:s:{audio} language={item.audio_languages[audio]} '
-        command += f'"{output_path}"'
+        command += f'{escape(output_path)}'
 
         try:
             check_call(shlex.split(command))
 
             os.rename(output_path,
-                      os.path.join(self.SUBBED_FOLDER, item.local_file))
+                      os.path.join(self.SUBBED_FOLDER, output_file))
             for sub in item.subs_out_file.values():
                 os.remove(os.path.join(self.TEMP_FOLDER, sub))
             os.remove(input_path)
+            item.local_file = output_file
 
         except CalledProcessError:
             print('Muxing failed !')

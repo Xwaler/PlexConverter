@@ -32,10 +32,10 @@ class PlexFetcher:
         failed = False
         while True:
             try:
-                response = get(url, params={'X-Plex-Token': self.plex_token})
+                response = get(url, params={'X-Plex-Token': self.plex_token}, timeout=(2, None))
 
                 if failed:
-                    print(' success !')
+                    print(' success !', flush=True)
                 return response
 
             except ConnectionError:
@@ -43,7 +43,7 @@ class PlexFetcher:
                     print('.', end='', flush=True)
                 else:
                     print('Failed to get response.', end='', flush=True)
-                failed = True
+                    failed = True
                 time.sleep(3)
 
     def getLibraries(self):
