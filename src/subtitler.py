@@ -174,7 +174,7 @@ class Subtitler:
     def mux(self, item):
         print(f'--- Muxing {item.name} ---')
         input_path = os.path.join(self.INPUT_FOLDER, item.local_file)
-        output_file = item.local_file[-3].rsplit('.', 1)[0] + '.mkv'
+        output_file = item.local_file.rsplit('.', 1)[0] + '.mkv'
         output_path = os.path.join(self.TEMP_FOLDER, output_file)
 
         command = f'ffmpeg -v warning -stats -i "{input_path}" '
