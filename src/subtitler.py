@@ -39,6 +39,8 @@ class Subtitler:
         self.upload_ssh = f'{config["SUBTITLER"]["USER"]}@{config["SUBTITLER"]["URL"]}'
         self.upload_dir = config['SUBTITLER']['DIRECTORY']
 
+        self.last_path = ''
+
     def rename(self, file):
         forbidden = ['/', '\\', '(', ')', '-', '_', '.']
         s_file = ""
@@ -219,9 +221,10 @@ class Subtitler:
 
         info_file = f'{os.path.join(self.TEMP_FOLDER, item.local_file)}.info'
         with open(info_file, 'w', encoding='utf-8') as f:
-            f.write(os.path.join(self.shared_directory,
-                                 input(f'Save in : {os.path.join(self.base_path, self.shared_directory)}'),
-                                 item.local_file))
+            if not (self.last_path and input(f'Save in same directory ? ({os.path.join(self.base_path, self.shared_directory, self.last_path)}) (y/n): ') == 'y'):
+                self.last_path = input(f'Save in : {os.path.join(self.base_path, self.shared_directory)}')
+
+            f.write(os.path.join(self.shared_directory, self.last_path, item.local_file))
         local_file = os.path.join(self.SUBBED_FOLDER, item.local_file)
 
         command_file = 'scp ' \
