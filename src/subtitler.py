@@ -5,8 +5,9 @@ import zipfile
 from configparser import ConfigParser
 from subprocess import check_call, CalledProcessError
 
-from modules import escape, getPendingItems, getNewItems
 from requests import get
+
+from modules import escape, getPendingItems, getNewItems
 
 
 class Subtitler:
@@ -39,16 +40,16 @@ class Subtitler:
         self.upload_ssh = f'{config["SUBTITLER"]["USER"]}@{config["SUBTITLER"]["URL"]}'
         self.upload_dir = config['SUBTITLER']['DIRECTORY']
 
-    def rename(self, file):
+    def rename(self, item):
         forbidden = ['/', '\\', '(', ')', '-', '_', '.']
         s_file = ""
-        for char in file:
+        name, extension = item.local_file.rsplit('.', 1)
+        for char in name:
             if char in forbidden:
                 if s_file[-1] != ' ':
                     s_file += ' '
             else:
                 s_file += char
-        new_name = ""
 
         words = s_file.split(' ')
         year = 'N.A.'
@@ -57,17 +58,20 @@ class Subtitler:
                 year = word
                 break
 
-        for word in words:
+        new_name = words[0]
+        for word in words[1:]:
             if word == year:
-                new_name += f"({word})"
+                new_name += f" ({word})"
                 break
             else:
-                new_name += f"{word} "
-        new_name += '.mkv'
+                new_name += f" {word}"
+        new_file = f'{new_name}.{extension}'
 
-        if file != new_name:
-            os.rename(os.path.join(self.INPUT_FOLDER, file),
-                      os.path.join(self.INPUT_FOLDER, new_name))
+        if item.local_file != new_name:
+            os.rename(os.path.join(self.INPUT_FOLDER, item.local_file),
+                      os.path.join(self.INPUT_FOLDER, new_file))
+            item.local_file = new_file
+            item.name = new_name
 
     def discoverSubtitles(self, item):
         for file in os.listdir(self.TEMP_FOLDER):
@@ -128,13 +132,15 @@ class Subtitler:
 
         os.remove(os.path.join(self.EXTRACT_FOLDER, 'sub.zip'))
         srts = []
-        for file in os.listdir(self.EXTRACT_FOLDER):
-            if os.path.isdir(os.path.join(self.EXTRACT_FOLDER, file)):
-                os.removedirs(os.path.join(self.EXTRACT_FOLDER, file))
-            elif not file.endswith('.srt'):
-                os.remove(os.path.join(self.EXTRACT_FOLDER, file))
+        for thing in os.listdir(self.EXTRACT_FOLDER):
+            if os.path.isdir(os.path.join(self.EXTRACT_FOLDER, thing)):
+                for in_file in os.listdir(os.path.join(self.EXTRACT_FOLDER, thing)):
+                    os.remove(os.path.join(self.EXTRACT_FOLDER, thing, in_file))
+                os.removedirs(os.path.join(self.EXTRACT_FOLDER, thing))
+            elif not thing.endswith('.srt'):
+                os.remove(os.path.join(self.EXTRACT_FOLDER, thing))
             else:
-                srts.append(file)
+                srts.append(thing)
         if not srts or len(srts) > 1:
             for srt in srts:
                 os.remove(os.path.join(self.EXTRACT_FOLDER, srt))
@@ -261,6 +267,8 @@ class Subtitler:
                 getNewItems(self.INPUT_FOLDER, items)
 
             for item in items[:]:
+                self.rename(item)
+
                 if item not in noSubOnline:
                     print(f'\n{item}')
 
