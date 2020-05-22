@@ -230,7 +230,7 @@ class Subtitler:
             if not (self.last_path and input(f'Save in same directory ? ({os.path.join(self.base_path, self.shared_directory, self.last_path)}) (y/n): ') == 'y'):
                 self.last_path = input(f'Save in : {os.path.join(self.base_path, self.shared_directory)}')
 
-            f.write(os.path.join(self.shared_directory, self.last_path, item.local_file))
+            f.write(os.path.join(self.base_path, self.shared_directory, self.last_path, item.local_file))
         local_file = os.path.join(self.SUBBED_FOLDER, item.local_file)
 
         command_file = 'scp ' \

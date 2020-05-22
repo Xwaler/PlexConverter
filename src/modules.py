@@ -16,7 +16,7 @@ MAX_BITRATE = config['CONVERTER'].getint('MAX_BITRATE')
 
 
 def escape(string):
-    for char in [' ', ',', ';', ':', '(', ')', '[', ']', '{', '}']:
+    for char in [' ', ',', ';', ':', '(', ')', '[', ']', '{', '}', '\'', '\"']:
         string = string.replace(char, '\\' + char)
     return string
 

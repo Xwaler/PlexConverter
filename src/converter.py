@@ -98,7 +98,7 @@ class PlexConverter:
                        f"'cd {escape(self.base_path)} && mkdir -p {escape(item.remote_directory)}'"
         command = 'scp ' \
                   f'{escape(os.path.join(self.OUTPUT_FOLDER, item.local_file))} ' \
-                  f'{escape(self.ssh)}:"{escape(os.path.join(self.base_path, item.remote_directory))}"'
+                  f'{escape(self.ssh)}:{escape(os.path.join(self.base_path, item.remote_directory))}'
 
         try:
             check_call(shlex.split(command_dirs))

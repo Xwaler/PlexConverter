@@ -95,7 +95,7 @@ class PlexFetcher:
     def download(self, item):
         print(f'--- Downloading {item.name} ---')
         path = os.path.join(self.base_path, item.remote_directory[1:], item.remote_file)
-        command = f'scp {escape(self.ssh)}:{escape(path)} {escape(self.TEMP_FOLDER)}'
+        command = f'scp {escape(self.ssh)}:"{escape(path)}" "{escape(self.TEMP_FOLDER)}"'
 
         try:
             check_call(shlex.split(command))
