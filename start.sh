@@ -9,12 +9,15 @@ if [ "$SESSIONEXISTS" = "" ]; then
 
   tmux send-keys -t $SESSION 'python3 src/converter.py' Enter
 
-  tmux split-window -t $SESSION -v
+  tmux split-window -t $SESSION -h
   tmux send-keys -t $SESSION 'python3 src/fetcher.py' Enter
 
-  tmux split-window -t $SESSION -h
+  tmux split-window -t $SESSION -v
+
+  tmux select-pane -t $SESSION -L
+  tmux split-window -t $SESSION -v
   tmux send-keys -t $SESSION 'python3 src/subtitler.py' Enter
 
-  tmux split-window -t $SESSION -v
+  tmux select-pane -t $SESSION -R
 fi
 tmux attach -t $SESSION

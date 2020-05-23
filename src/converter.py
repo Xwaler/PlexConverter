@@ -116,7 +116,6 @@ class PlexConverter:
 
             if converting or normalizing or uploading:
                 waiting = False
-                reset = False
 
                 for item in uploading:
                     self.upload(item)

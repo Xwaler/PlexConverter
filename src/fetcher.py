@@ -110,11 +110,10 @@ class PlexFetcher:
             self.download(item)
 
     def folderFull(self):
-        return len(os.listdir(self.CONVERTING_FOLDER)) > 5
+        return len(os.listdir(self.CONVERTING_FOLDER)) > 2
 
     def notDownloaded(self, item):
-        return not (os.path.exists(os.path.join(self.CONVERTING_FOLDER, item.remote_file)) and
-                    0.99 <= os.path.getsize(os.path.join(self.CONVERTING_FOLDER, item.remote_file)) / item.size <= 1.01)
+        return not os.path.exists(os.path.join(self.TEMP_FOLDER, f'{item.remote_file.rsplit(".", 1)[0]}.info'))
 
     def run(self):
         done = []
