@@ -4,7 +4,7 @@ import time
 from configparser import ConfigParser
 from subprocess import check_call, CalledProcessError
 
-from modules import escape, getPendingItems, getNewItems
+from modules import escape, getPendingItems
 
 
 class PlexConverter:
@@ -26,20 +26,16 @@ class PlexConverter:
         if not os.path.exists(self.OUTPUT_FOLDER):
             os.mkdir(self.OUTPUT_FOLDER)
 
-        self.base_path = config['SSH']['BASE_PATH']
         self.ssh = f'{config["SSH"]["USER"]}@{config["PLEX"]["URL"]}'
 
         self.max_video_width = config['CONVERTER'].getint('MAX_VIDEO_WIDTH')
         self.avg_bitrate = config['CONVERTER'].getint('AVERAGE_BITRATE')
         self.max_bitrate = config['CONVERTER'].getint('MAX_BITRATE')
 
-    def notConverted(self, item):
-        return not os.path.exists(os.path.join(self.NORMALIZING_FOLDER, item.local_file))
-
     def convert(self, item):
         print(f'--- Converting {item.name} ---')
         input_path = os.path.join(self.CONVERTING_FOLDER, item.local_file)
-        output_path = os.path.join(self.TEMP_FOLDER, item.local_file)
+        output_path = os.path.join(self.TEMP_FOLDER, item.local_file.rsplit('.', 1)[0] + '.mkv')
 
         nvenc = 'CUDA' in os.environ['PATH']
         video_options = '-c:v h264_nvenc -preset slow -rc:v vbr_hq -cq:v 19' if nvenc \
@@ -64,14 +60,13 @@ class PlexConverter:
             check_call(shlex.split(command))
             os.rename(output_path,
                       os.path.join(self.NORMALIZING_FOLDER, item.local_file))
+            os.remove(input_path)
+            item.local_file = os.path.basename(output_path)
 
         except CalledProcessError:
             print('Convertion failed !')
             time.sleep(30)
             self.convert(item)
-
-    def notNormalized(self, item):
-        return not os.path.exists(os.path.join(self.OUTPUT_FOLDER, item.local_file))
 
     def normalize(self, item):
         print(f'--- Normalizing {item.name} ---')
@@ -82,76 +77,68 @@ class PlexConverter:
 
         try:
             check_call(shlex.split(command))
+            os.remove(input_path)
+            item.local_file = os.path.basename(output_path)
 
         except CalledProcessError:
             print('Normalization failed !')
             time.sleep(30)
             self.normalize(item)
 
-    def ready(self, item):
-        return os.path.exists(os.path.join(self.OUTPUT_FOLDER, item.local_file)) and \
-               os.path.getsize(os.path.join(self.OUTPUT_FOLDER, item.local_file)) > 1_000
-
     def upload(self, item):
         print(f'--- Uploading {item.name} ---')
         command_dirs = f'ssh {escape(self.ssh)} ' \
-                       f"'cd {escape(self.base_path)} && mkdir -p {escape(item.remote_directory)}'"
+                       f"'cd {escape(self.base_path)} && " \
+                       f"mkdir -p {escape(item.remote_directory)} && " \
+                       f"rm -f {escape(item.remote_path)}'"
         command = 'scp ' \
-                  f'{escape(os.path.join(self.OUTPUT_FOLDER, item.local_file))} ' \
-                  f'{escape(self.ssh)}:{escape(os.path.join(self.base_path, item.remote_directory))}'
+                  f'"{os.path.join(self.OUTPUT_FOLDER, item.local_file)}" ' \
+                  f'{self.ssh}:"\'{os.path.join(os.path.dirname(item.remote_path), item.local_file)}\'"'
 
         try:
             check_call(shlex.split(command_dirs))
             check_call(shlex.split(command))
+
+            os.remove(os.path.join(self.OUTPUT_FOLDER, item.local_file))
+            info = os.path.join(self.TEMP_FOLDER, item.name + '.info')
+            os.remove(info)
 
         except CalledProcessError:
             print('Upload failed !')
             time.sleep(30)
             self.upload(item)
 
-    def cleanup(self, item):
-        os.remove(os.path.join(self.CONVERTING_FOLDER, item.local_file))
-        os.remove(os.path.join(self.NORMALIZING_FOLDER, item.local_file))
-        os.remove(os.path.join(self.OUTPUT_FOLDER, item.local_file))
-
-        info = os.path.join(self.TEMP_FOLDER, item.local_file + '.info')
-        if os.path.exists(info):
-            os.remove(info)
-
     def run(self):
-        items = getPendingItems(self.CONVERTING_FOLDER)
-
+        waiting = False
         while True:
-            while items:
-                item = items[0]
-                for i in items:
-                    if not i.needVideoConvert():
-                        item = i
-                        break
+            converting = getPendingItems(self.CONVERTING_FOLDER)
+            normalizing = getPendingItems(self.NORMALIZING_FOLDER)
+            uploading = getPendingItems(self.OUTPUT_FOLDER)
 
-                print(f'\n{item}')
+            if converting or normalizing or uploading:
+                waiting = False
 
-                while self.notConverted(item):
-                    self.convert(item)
+                for item in uploading:
+                    self.upload(item)
 
-                while self.notNormalized(item):
+                for item in converting:
+                    if not item.needVideoConvert():
+                        self.convert(item)
+
+                for item in normalizing:
                     self.normalize(item)
 
-                if self.ready(item):
-                    self.upload(item)
-                    self.cleanup(item)
-                    items.remove(item)
+                for item in converting:
+                    if item.needVideoConvert():
+                        self.convert(item)
+
+            else:
+                if not waiting:
+                    print('\nWaiting for new files...')
+                    waiting = True
 
                 else:
-                    print('Failed !')
-
-            getNewItems(self.CONVERTING_FOLDER, items)
-            if not items:
-                print('\nWaiting for new files...')
-
-            while not items:
-                time.sleep(1)
-                getNewItems(self.CONVERTING_FOLDER, items)
+                    time.sleep(1)
 
 
 if __name__ == '__main__':

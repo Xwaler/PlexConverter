@@ -4,10 +4,11 @@ import time
 from configparser import ConfigParser
 from subprocess import check_call, CalledProcessError
 
-from modules import RemoteItem, Library, escape
 from requests import get
 from requests.exceptions import ConnectionError
 from xmltodict import parse
+
+from modules import RemoteItem, Library
 
 
 class PlexFetcher:
@@ -26,7 +27,6 @@ class PlexFetcher:
         self.plex_token = config['PLEX']['TOKEN']
         self.plex_url = f'http://{config["PLEX"]["URL"]}:{config["PLEX"]["PORT"]}'
         self.ssh = f'{config["SSH"]["USER"]}@{config["PLEX"]["URL"]}'
-        self.base_path = config["SSH"]["BASE_PATH"]
 
     def get_wrapper(self, url):
         failed = False
@@ -94,16 +94,15 @@ class PlexFetcher:
 
     def download(self, item):
         print(f'--- Downloading {item.name} ---')
-        path = os.path.join(self.base_path, item.remote_directory[1:], item.remote_file)
-        command = f'scp {escape(self.ssh)}:"{escape(path)}" "{escape(self.TEMP_FOLDER)}"'
+        command = f'scp {self.ssh}:"\'{item.remote_path}\'" "{self.TEMP_FOLDER}"'
 
         try:
             check_call(shlex.split(command))
 
-            with open(os.path.join(self.TEMP_FOLDER, f'{item.local_file}.info'), 'w') as f:
+            with open(os.path.join(self.TEMP_FOLDER, f'{item.remote_file.rsplit(".", 1)[0]}.info'), 'w') as f:
                 f.write(item.remote_path)
             os.rename(os.path.join(self.TEMP_FOLDER, item.remote_file),
-                      os.path.join(self.CONVERTING_FOLDER, item.local_file))
+                      os.path.join(self.CONVERTING_FOLDER, item.remote_file))
 
         except CalledProcessError:
             print('Download failed, retry soon...')
@@ -114,8 +113,8 @@ class PlexFetcher:
         return len(os.listdir(self.CONVERTING_FOLDER)) > 5
 
     def notDownloaded(self, item):
-        return not (os.path.exists(os.path.join(self.CONVERTING_FOLDER, item.local_file)) and
-                    0.99 <= os.path.getsize(os.path.join(self.CONVERTING_FOLDER, item.local_file)) / item.size <= 1.01)
+        return not (os.path.exists(os.path.join(self.CONVERTING_FOLDER, item.remote_file)) and
+                    0.99 <= os.path.getsize(os.path.join(self.CONVERTING_FOLDER, item.remote_file)) / item.size <= 1.01)
 
     def run(self):
         done = []

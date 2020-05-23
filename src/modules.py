@@ -4,8 +4,9 @@ from difflib import SequenceMatcher
 
 import psutil
 from bs4 import BeautifulSoup
-from ffprobe_wrapper import FFProbe
 from requests import get, session
+
+from ffprobe_wrapper import FFProbe
 
 config = ConfigParser()
 config.read('config.ini')
@@ -58,7 +59,7 @@ class Item:
     def __init__(self):
         self.name = None
         self.remote_path = None
-        self.remote_directory, self.remote_file = None, None
+        self.remote_file = None
         self.local_file = None
         self.bitrate = None
         self.framerate = None
@@ -127,7 +128,7 @@ class LocalItem(Item):
         audio = metadata.audio[0]
 
         self.local_file = os.path.basename(metadata.path_to_video)
-        self.name = self.local_file[:-4]
+        self.name = self.local_file.rsplit('.', 1)[0]
         print(f'Found {self.name}')
 
         self.getRemotePath()
@@ -155,10 +156,9 @@ class LocalItem(Item):
 
     def getRemotePath(self):
         for file in os.listdir(TEMP_FOLDER):
-            if file == self.local_file + '.info':
+            if file == self.name + '.info':
                 self.remote_path = open(os.path.join(TEMP_FOLDER, file), 'r', encoding='utf-8').readline()
-                self.remote_directory, self.remote_file = self.remote_path.rsplit('/', 1)
-                self.remote_directory += '/'
+                self.remote_file = os.path.basename(self.remote_path)
                 return
 
     def getSubFromYify(self):
@@ -273,10 +273,8 @@ class RemoteItem(Item):
 
         self.name = name
 
-        self.remote_path = media_info['Part']['@file'].replace('/share/CACHEDEV1_DATA/', '/')
-        self.remote_directory, self.remote_file = self.remote_path.rsplit('/', 1)
-        self.remote_directory += '/'
-        self.local_file = self.remote_file[:-3] + 'mkv'
+        self.remote_path = media_info['Part']['@file']
+        self.remote_file = os.path.basename(self.remote_path)
 
         self.video_codec = media_info['@videoCodec']
         self.video_profile = media_info['@videoProfile']

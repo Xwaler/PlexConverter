@@ -32,8 +32,7 @@ class Subtitler:
         if not os.path.exists(self.CONVERTING_FOLDER):
             os.mkdir(self.CONVERTING_FOLDER)
 
-        self.base_path = config['SSH']['BASE_PATH']
-        self.shared_directory = config['PLEX']['SHARED_DIRECTORY']
+        self.library_directory = config["PLEX"]["LIBRARY_DIRECTORY"]
 
         self.player = config['SUBTITLER']['PLAYER']
         self.upload_after = config['SUBTITLER'].getboolean('UPLOAD_AFTER')
@@ -182,7 +181,7 @@ class Subtitler:
     def mux(self, item):
         print(f'--- Muxing {item.name} ---')
         input_path = os.path.join(self.INPUT_FOLDER, item.local_file)
-        output_file = item.local_file.rsplit('.', 1)[0] + '.mkv'
+        output_file = item.name + '.mkv'
         output_path = os.path.join(self.TEMP_FOLDER, output_file)
 
         command = f'ffmpeg -v warning -stats -i "{input_path}" '
@@ -225,21 +224,23 @@ class Subtitler:
     def upload(self, item):
         print(f'--- Uploading {item.name} ---')
 
-        info_file = f'{os.path.join(self.TEMP_FOLDER, item.local_file)}.info'
+        info_file = f'{os.path.join(self.TEMP_FOLDER, item.name)}.info'
         with open(info_file, 'w', encoding='utf-8') as f:
-            if not (self.last_path and input(f'Save in same directory ? ({os.path.join(self.base_path, self.shared_directory, self.last_path)}) (y/n): ') == 'y'):
-                self.last_path = input(f'Save in : {os.path.join(self.base_path, self.shared_directory)}')
+            if not (self.last_path and input(f'Save in same directory ? '
+                                             f'({os.path.join(self.library_directory, self.last_path)}) '
+                                             f'(y/n): ') == 'y'):
+                self.last_path = input(f'Save in : {self.library_directory}')
 
-            f.write(os.path.join(self.base_path, self.shared_directory, self.last_path, item.local_file))
+            f.write(os.path.join(self.library_directory, self.last_path, item.local_file))
         local_file = os.path.join(self.SUBBED_FOLDER, item.local_file)
 
         command_file = 'scp ' \
-                       f'{escape(local_file)} ' \
-                       f'{escape(self.upload_ssh)}:"{escape(os.path.join(self.upload_dir, self.CONVERTING_FOLDER))}"'
+                       f'"{local_file}" ' \
+                       f'{self.upload_ssh}:"\'{os.path.join(self.upload_dir, self.CONVERTING_FOLDER)}\'"'
 
         command_info = 'scp ' \
-                       f'{escape(info_file)} ' \
-                       f'{escape(self.upload_ssh)}:"{escape(os.path.join(self.upload_dir, self.TEMP_FOLDER))}"'
+                       f'"{info_file}" ' \
+                       f'{self.upload_ssh}:"\'{os.path.join(self.upload_dir, self.TEMP_FOLDER)}\'"'
 
         try:
             check_call(shlex.split(command_info))
@@ -262,6 +263,9 @@ class Subtitler:
         noSubOnline = []
 
         while True:
+            for item in getPendingItems(self.SUBBED_FOLDER):
+                self.upload(item)
+
             getNewItems(self.INPUT_FOLDER, items)
             if not items:
                 print('\nWaiting for new files...')
