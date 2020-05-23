@@ -1,4 +1,5 @@
 import os
+import platform
 from configparser import ConfigParser
 from difflib import SequenceMatcher
 
@@ -14,6 +15,8 @@ config.read('config.ini')
 TEMP_FOLDER = config['FOLDERS']['TEMP']
 MAX_VIDEO_WIDTH = config['CONVERTER'].getint('MAX_VIDEO_WIDTH')
 MAX_BITRATE = config['CONVERTER'].getint('MAX_BITRATE')
+
+scp_option = '-T' if platform.system() == 'Linux' else ''
 
 
 def escape(string):
