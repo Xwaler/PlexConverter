@@ -8,7 +8,7 @@ from requests import get
 from requests.exceptions import ConnectionError
 from xmltodict import parse
 
-from modules import RemoteItem, Library
+from modules import RemoteItem, Library, scp_option
 
 
 class PlexFetcher:
@@ -94,7 +94,7 @@ class PlexFetcher:
 
     def download(self, item):
         print(f'--- Downloading {item.name} ---')
-        command = f'scp -T {self.ssh}:"\'{item.remote_path}\'" "{self.TEMP_FOLDER}"'
+        command = f'scp {scp_option} {self.ssh}:\'\"{item.remote_path}\"\' "{self.TEMP_FOLDER}"'
 
         try:
             check_call(shlex.split(command))

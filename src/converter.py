@@ -4,7 +4,7 @@ import time
 from configparser import ConfigParser
 from subprocess import check_call, CalledProcessError
 
-from modules import escape, getPendingItems
+from modules import escape, getPendingItems, scp_option
 
 
 class PlexConverter:
@@ -90,9 +90,9 @@ class PlexConverter:
         command_dirs = f'ssh {escape(self.ssh)} ' \
                        f"'mkdir -p {escape(os.path.dirname(item.remote_path))} && " \
                        f"rm -f {escape(item.remote_path)}'"
-        command = 'scp -T ' \
+        command = f'scp {scp_option} ' \
                   f'"{os.path.join(self.OUTPUT_FOLDER, item.local_file)}" ' \
-                  f'{self.ssh}:"\'{os.path.join(os.path.dirname(item.remote_path), item.local_file)}\'"'
+                  f'{self.ssh}:\'\"{os.path.join(os.path.dirname(item.remote_path), item.local_file)}\"\''
 
         try:
             check_call(shlex.split(command_dirs))

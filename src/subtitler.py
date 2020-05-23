@@ -7,7 +7,7 @@ from subprocess import check_call, CalledProcessError
 
 from requests import get
 
-from modules import escape, getPendingItems, getNewItems
+from modules import escape, getPendingItems, getNewItems, scp_option
 
 
 class Subtitler:
@@ -234,13 +234,13 @@ class Subtitler:
             f.write(os.path.join(self.library_directory, self.last_path, item.local_file))
         local_file = os.path.join(self.SUBBED_FOLDER, item.local_file)
 
-        command_file = 'scp -T ' \
-                       f'"{local_file}" ' \
-                       f'{self.upload_ssh}:"\'{os.path.join(self.upload_dir, self.CONVERTING_FOLDER)}\'"'
-
-        command_info = 'scp -T ' \
+        command_info = f'scp {scp_option} ' \
                        f'"{info_file}" ' \
-                       f'{self.upload_ssh}:"\'{os.path.join(self.upload_dir, self.TEMP_FOLDER)}\'"'
+                       f'{self.upload_ssh}:\'\"{os.path.join(self.upload_dir, self.TEMP_FOLDER)}\"\''
+
+        command_file = f'scp {scp_option} ' \
+                       f'"{local_file}" ' \
+                       f'{self.upload_ssh}:\'\"{os.path.join(self.upload_dir, self.CONVERTING_FOLDER)}\"\''
 
         try:
             check_call(shlex.split(command_info))
