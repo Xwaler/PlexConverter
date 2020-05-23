@@ -33,7 +33,7 @@ class PlexConverter:
         self.max_bitrate = config['CONVERTER'].getint('MAX_BITRATE')
 
     def convert(self, item):
-        print(f'--- Converting {item.name} ---')
+        print(f'--- Converting ---')
         input_path = os.path.join(self.CONVERTING_FOLDER, item.local_file)
         output_path = os.path.join(self.TEMP_FOLDER, item.local_file.rsplit('.', 1)[0] + '.mkv')
 
@@ -69,7 +69,7 @@ class PlexConverter:
             self.convert(item)
 
     def normalize(self, item):
-        print(f'--- Normalizing {item.name} ---')
+        print(f'--- Normalizing ---')
         input_path = os.path.join(self.NORMALIZING_FOLDER, item.local_file)
         output_path = os.path.join(self.OUTPUT_FOLDER, item.local_file)
 
@@ -86,7 +86,7 @@ class PlexConverter:
             self.normalize(item)
 
     def upload(self, item):
-        print(f'--- Uploading {item.name} ---')
+        print(f'--- Uploading ---')
         command_dirs = f'ssh {escape(self.ssh)} ' \
                        f"'mkdir -p {escape(os.path.dirname(item.remote_path))} && " \
                        f"rm -f {escape(item.remote_path)}'"
@@ -118,20 +118,24 @@ class PlexConverter:
                 waiting = False
 
                 for item in uploading:
+                    print(f'\n{item}')
                     self.upload(item)
 
                 for item in converting:
                     if not item.needVideoConvert():
+                        print(f'\n{item}')
                         self.convert(item)
                         self.normalize(item)
                         self.upload(item)
 
                 for item in normalizing:
+                    print(f'\n{item}')
                     self.normalize(item)
                     self.upload(item)
 
                 for item in converting:
                     if item.needVideoConvert():
+                        print(f'\n{item}')
                         self.convert(item)
                         break
 

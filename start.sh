@@ -13,6 +13,7 @@ if [ "$SESSIONEXISTS" = "" ]; then
   tmux send-keys -t $SESSION 'python3 src/fetcher.py' Enter
 
   tmux split-window -t $SESSION -v
+  tmux send-keys -t $SESSION 'top -d 10'
 
   tmux select-pane -t $SESSION -L
   tmux split-window -t $SESSION -v
