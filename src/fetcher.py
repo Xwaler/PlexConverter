@@ -94,7 +94,7 @@ class PlexFetcher:
 
     def download(self, item):
         print(f'--- Downloading {item.name} ---')
-        command = f'scp {self.ssh}:"\'{item.remote_path}\'" "{self.TEMP_FOLDER}"'
+        command = f'scp -T {self.ssh}:"\'{item.remote_path}\'" "{self.TEMP_FOLDER}"'
 
         try:
             check_call(shlex.split(command))

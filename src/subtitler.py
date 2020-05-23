@@ -234,11 +234,11 @@ class Subtitler:
             f.write(os.path.join(self.library_directory, self.last_path, item.local_file))
         local_file = os.path.join(self.SUBBED_FOLDER, item.local_file)
 
-        command_file = 'scp ' \
+        command_file = 'scp -T ' \
                        f'"{local_file}" ' \
                        f'{self.upload_ssh}:"\'{os.path.join(self.upload_dir, self.CONVERTING_FOLDER)}\'"'
 
-        command_info = 'scp ' \
+        command_info = 'scp -T ' \
                        f'"{info_file}" ' \
                        f'{self.upload_ssh}:"\'{os.path.join(self.upload_dir, self.TEMP_FOLDER)}\'"'
 

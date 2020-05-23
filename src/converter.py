@@ -88,10 +88,9 @@ class PlexConverter:
     def upload(self, item):
         print(f'--- Uploading {item.name} ---')
         command_dirs = f'ssh {escape(self.ssh)} ' \
-                       f"'cd {escape(self.base_path)} && " \
-                       f"mkdir -p {escape(item.remote_directory)} && " \
+                       f"'mkdir -p {escape(os.path.dirname(item.remote_path))} && " \
                        f"rm -f {escape(item.remote_path)}'"
-        command = 'scp ' \
+        command = 'scp -T ' \
                   f'"{os.path.join(self.OUTPUT_FOLDER, item.local_file)}" ' \
                   f'{self.ssh}:"\'{os.path.join(os.path.dirname(item.remote_path), item.local_file)}\'"'
 
@@ -117,6 +116,7 @@ class PlexConverter:
 
             if converting or normalizing or uploading:
                 waiting = False
+                reset = False
 
                 for item in uploading:
                     self.upload(item)
@@ -124,13 +124,17 @@ class PlexConverter:
                 for item in converting:
                     if not item.needVideoConvert():
                         self.convert(item)
+                        self.normalize(item)
+                        self.upload(item)
 
                 for item in normalizing:
                     self.normalize(item)
+                    self.upload(item)
 
                 for item in converting:
                     if item.needVideoConvert():
                         self.convert(item)
+                        break
 
             else:
                 if not waiting:
