@@ -3,3 +3,4 @@ requests
 xmltodict
 psutil
 bs4
+ffmpeg-normalize

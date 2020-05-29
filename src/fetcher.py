@@ -110,7 +110,7 @@ class PlexFetcher:
             self.download(item)
 
     def folderFull(self):
-        return len(os.listdir(self.CONVERTING_FOLDER)) > 2
+        return sum(f.endswith('.info') for f in os.listdir(self.TEMP_FOLDER)) >= 2
 
     def notDownloaded(self, item):
         return not os.path.exists(os.path.join(self.TEMP_FOLDER, f'{item.remote_file.rsplit(".", 1)[0]}.info'))
