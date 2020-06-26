@@ -234,17 +234,17 @@ class Subtitler:
             f.write(os.path.join(self.library_directory, self.last_path, item.local_file))
         local_file = os.path.join(self.SUBBED_FOLDER, item.local_file)
 
-        command_info = f'scp {scp_option} ' \
-                       f'"{info_file}" ' \
-                       f'{self.upload_ssh}:\'\"{os.path.join(self.upload_dir, self.TEMP_FOLDER)}\"\''
+        command_info = ['scp', scp_option,
+                        info_file,
+                        f'{self.upload_ssh}:{shlex.quote(os.path.join(self.upload_dir, self.TEMP_FOLDER))}']
 
-        command_file = f'scp {scp_option} ' \
-                       f'"{local_file}" ' \
-                       f'{self.upload_ssh}:\'\"{os.path.join(self.upload_dir, self.CONVERTING_FOLDER)}\"\''
+        command_file = ['scp', scp_option,
+                        local_file,
+                        f'{self.upload_ssh}:{shlex.quote(os.path.join(self.upload_dir, self.CONVERTING_FOLDER))}']
 
         try:
-            check_call(shlex.split(command_info))
-            check_call(shlex.split(command_file))
+            check_call(command_info)
+            check_call(command_file)
 
             os.remove(local_file)
             os.remove(info_file)

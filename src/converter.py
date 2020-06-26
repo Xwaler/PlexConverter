@@ -87,16 +87,16 @@ class PlexConverter:
 
     def upload(self, item):
         print(f'--- Uploading ---')
-        command_dirs = f'ssh {escape(self.ssh)} ' \
-                       f"'mkdir -p {escape(os.path.dirname(item.remote_path))} && " \
-                       f"rm -f {escape(item.remote_path)}'"
-        command = f'scp {scp_option} ' \
-                  f'"{os.path.join(self.OUTPUT_FOLDER, item.local_file)}" ' \
-                  f'{self.ssh}:\'\"{os.path.join(os.path.dirname(item.remote_path), item.local_file)}\"\''
+        command_dirs = ['ssh', self.ssh,
+                        'mkdir', '-p', shlex.quote(os.path.dirname(item.remote_path)), '&&',
+                        'rm', '-f', shlex.quote(item.remote_path)]
+        command = ['scp', scp_option,
+                   os.path.join(self.OUTPUT_FOLDER, item.local_file),
+                   f'{self.ssh}:{shlex.quote(os.path.join(os.path.dirname(item.remote_path), item.local_file))}']
 
         try:
-            check_call(shlex.split(command_dirs))
-            check_call(shlex.split(command))
+            check_call(command_dirs)
+            check_call(command)
 
             os.remove(os.path.join(self.OUTPUT_FOLDER, item.local_file))
             info = os.path.join(self.TEMP_FOLDER, item.name + '.info')
