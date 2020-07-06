@@ -83,14 +83,8 @@ class PlexFetcher:
 
     def getPendingItems(self, library):
         all_items = self.getItems(library)
-        pending_items, n_cant_correct = [], 0
-        for item in all_items:
-            if item.reasons:
-                if item.canBeCorrected():
-                    pending_items.append(item)
-                else:
-                    n_cant_correct += 1
-        return pending_items, n_cant_correct, len(all_items)
+        pending_items = [item for item in all_items if item.reasons]
+        return pending_items, len(all_items)
 
     def download(self, item):
         print(f'--- Downloading {item.name} ---')
@@ -123,13 +117,13 @@ class PlexFetcher:
             for library in self.getLibraries():
                 print(f'Library {library.name}: ', end='', flush=True)
 
-                pending_items, cant_be_corrected, count_items = self.getPendingItems(library)
+                pending_items, count_items = self.getPendingItems(library)
                 items = [item for item in pending_items
                          if item not in done and self.notDownloaded(item)]
                 size = len(items)
                 i = 0
 
-                print(f'{len(pending_items)} pending, {cant_be_corrected} can\'t be corrected, {count_items} total')
+                print(f'{len(pending_items)} pending, {count_items} total')
                 for item in items:
                     print(f'Entry {i + 1}/{size}\n{item}')
 

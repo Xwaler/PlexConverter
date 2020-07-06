@@ -111,11 +111,7 @@ class Item:
     def needAudioConvert(self):
         return 'Audio codec' in self.reasons or \
                'Audio channels' in self.reasons
-
-    def canBeCorrected(self):
-        return not (('Audio channels' in self.reasons and self.reasons['Audio channels'] == '1') or
-                    ('Low resolution' in self.reasons))
-
+               
     def __repr__(self):
         return f'{self.name} | {self.reasons}'
 
