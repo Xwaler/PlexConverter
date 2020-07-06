@@ -53,19 +53,27 @@ class Subtitler:
                 s_file += char
 
         words = s_file.split(' ')
-        year = 'N.A.'
+        year = None
         for word in words[::-1]:
             if word.isdigit() and len(word) == 4:
                 year = word
                 break
 
+        if not year:
+        	return
+
         new_name = words[0]
+        correct = False
         for word in words[1:]:
             if word == year:
                 new_name += f" ({word})"
+                correct = True
                 break
             else:
                 new_name += f" {word}"
+
+        if not correct:
+        	return
         new_file = f'{new_name}.{extension}'
 
         if item.local_file != new_name:
@@ -234,17 +242,17 @@ class Subtitler:
             f.write(os.path.join(self.library_directory, self.last_path, item.local_file))
         local_file = os.path.join(self.SUBBED_FOLDER, item.local_file)
 
-        command_info = ['scp', scp_option,
-                        info_file,
-                        f'{self.upload_ssh}:{shlex.quote(os.path.join(self.upload_dir, self.TEMP_FOLDER))}']
+        command_info = f'scp {scp_option} ' \
+                       f'"{info_file}" ' \
+                       f'{self.upload_ssh}:\'\"{os.path.join(self.upload_dir, self.TEMP_FOLDER)}\"\''
 
-        command_file = ['scp', scp_option,
-                        local_file,
-                        f'{self.upload_ssh}:{shlex.quote(os.path.join(self.upload_dir, self.CONVERTING_FOLDER))}']
+        command_file = f'scp {scp_option} ' \
+                       f'"{local_file}" ' \
+                       f'{self.upload_ssh}:\'\"{os.path.join(self.upload_dir, self.CONVERTING_FOLDER)}\"\''
 
         try:
-            check_call(command_info)
-            check_call(command_file)
+            check_call(shlex.split(command_info))
+            check_call(shlex.split(command_file))
 
             os.remove(local_file)
             os.remove(info_file)
@@ -259,7 +267,7 @@ class Subtitler:
                   os.path.join(self.CONVERTING_FOLDER, item.local_file))
 
     def run(self):
-        items = getPendingItems(self.INPUT_FOLDER)
+        items = []
         noSubOnline = []
 
         while True:
