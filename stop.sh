@@ -1,4 +1,4 @@
 #!/bin/sh
 
-SESSION="PlexScripts"
+SESSION="PlexConverter"
 tmux kill-session -t $SESSION
