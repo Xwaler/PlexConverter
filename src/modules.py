@@ -14,6 +14,7 @@ config.read('config.ini')
 
 TEMP_FOLDER = config['FOLDERS']['TEMP']
 MAX_VIDEO_WIDTH = config['CONVERTER'].getint('MAX_VIDEO_WIDTH')
+MAX_VIDEO_HEIGHT = config['CONVERTER'].getint('MAX_VIDEO_HEIGHT')
 MAX_BITRATE = config['CONVERTER'].getint('MAX_BITRATE')
 
 scp_option = '-T' if platform.system() == 'Linux' else ''
@@ -93,7 +94,7 @@ class Item:
             self.reasons['High bitrate'] = {'Bitrate': self.bitrate,
                                             'Resolution': self.video_resolution}
 
-        elif self.video_resolution[1] < MAX_VIDEO_WIDTH:
+        elif self.video_resolution[0] < MAX_VIDEO_HEIGHT and self.video_resolution[1] < MAX_VIDEO_WIDTH:
             self.reasons['Low resolution'] = self.video_resolution
 
         if self.container != 'mkv':
