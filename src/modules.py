@@ -46,7 +46,7 @@ def getPendingItems(folder):
         while has_handle(path):
             pass
         items.append(LocalItem(FFProbe(path)))
-    return items
+    return sorted(items, key=lambda x: x.name)
 
 
 def getNewItems(folder, items):
@@ -57,6 +57,7 @@ def getNewItems(folder, items):
         while has_handle(path):
             pass
         items.append(LocalItem(FFProbe(path)))
+    items.sort(key=lambda x: x.name)
 
 
 class Item:
