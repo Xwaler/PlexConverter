@@ -108,12 +108,13 @@ class Item:
     def needVideoConvert(self):
         return 'Video codec' in self.reasons or \
                'High bitrate' in self.reasons or \
-               'Framerate' in self.reasons
+               'Framerate' in self.reasons or \
+               'Low resolution' in self.reasons
 
     def needAudioConvert(self):
         return 'Audio codec' in self.reasons or \
                'Audio channels' in self.reasons
-               
+
     def __repr__(self):
         return f'{self.name} | {self.reasons}'
 
