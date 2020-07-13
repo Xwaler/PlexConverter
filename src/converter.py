@@ -58,10 +58,10 @@ class PlexConverter:
 
         try:
             check_call(shlex.split(command))
+            item.local_file = os.path.basename(output_path)
             os.rename(output_path,
                       os.path.join(self.NORMALIZING_FOLDER, item.local_file))
             os.remove(input_path)
-            item.local_file = os.path.basename(output_path)
 
         except CalledProcessError:
             print('Convertion failed !')
@@ -78,7 +78,6 @@ class PlexConverter:
         try:
             check_call(shlex.split(command))
             os.remove(input_path)
-            item.local_file = os.path.basename(output_path)
 
         except CalledProcessError:
             print('Normalization failed !')
@@ -88,15 +87,19 @@ class PlexConverter:
     def upload(self, item):
         print(f'--- Uploading ---')
         command_dirs = ['ssh', self.ssh,
-                        'mkdir', '-p', shlex.quote(os.path.dirname(item.remote_path)), '&&',
-                        'rm', '-f', shlex.quote(item.remote_path)]
+                        'mkdir', '-p', shlex.quote(os.path.dirname(item.remote_path))]
         command = ['scp', scp_option,
                    os.path.join(self.OUTPUT_FOLDER, item.local_file),
                    f'{self.ssh}:{shlex.quote(os.path.join(os.path.dirname(item.remote_path), item.local_file))}']
+        command_duplicate = ['ssh', self.ssh,
+                             'rm', '-f', shlex.quote(item.remote_path)]
 
         try:
             check_call(command_dirs)
             check_call(command)
+            if item.remote_file != item.local_file:
+                print(f'Removing old file {item.remote_file}')
+                check_call(command_duplicate)
 
             os.remove(os.path.join(self.OUTPUT_FOLDER, item.local_file))
             info = os.path.join(self.TEMP_FOLDER, item.name + '.info')

@@ -135,6 +135,7 @@ class PlexFetcher:
 
                     done.append(item)
                     i += 1
+                    print('', end='\n')
 
             time.sleep(150)
 
