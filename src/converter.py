@@ -85,7 +85,7 @@ class PlexConverter:
             self.normalize(item)
 
     def upload(self, item):
-        print(f'--- Uploading ---')
+        print(f'--- Uploading ---\nTo {os.path.dirname(item.remote_path)}')
         command_dirs = ['ssh', self.ssh,
                         'mkdir', '-p', shlex.quote(os.path.dirname(item.remote_path))]
         command = ['scp', scp_option,

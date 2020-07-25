@@ -230,16 +230,17 @@ class Subtitler:
             time.sleep(30)
             self.mux(item)
 
+    def ask_path(self):
+        if not (self.last_path and input(f'>> Save in same directory ? '
+                                         f'({os.path.join(self.library_directory, self.last_path)}) '
+                                         f'(Y/n): ') != 'n'):
+                self.last_path = input(f'>> Save in : {self.library_directory}')
+
     def upload(self, item):
         print(f'--- Uploading {item.name} ---')
 
         info_file = f'{os.path.join(self.TEMP_FOLDER, item.name)}.info'
         with open(info_file, 'w', encoding='utf-8') as f:
-            if not (self.last_path and input(f'Save in same directory ? '
-                                             f'({os.path.join(self.library_directory, self.last_path)}) '
-                                             f'(Y/n): ') != 'n'):
-                self.last_path = input(f'Save in : {self.library_directory}')
-
             f.write(os.path.join(self.library_directory, self.last_path, item.local_file))
         local_file = os.path.join(self.SUBBED_FOLDER, item.local_file)
 
@@ -297,6 +298,7 @@ class Subtitler:
                         print(f'\n{item}')
                         noSubOnline.remove(item)
 
+                    self.ask_path()
                     self.mux(item)
                     if self.upload_after:
                         self.upload(item)
