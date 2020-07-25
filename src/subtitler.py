@@ -77,10 +77,11 @@ class Subtitler:
         new_file = f'{new_name}.{extension}'
 
         if item.local_file != new_name:
-            os.rename(os.path.join(self.INPUT_FOLDER, item.local_file),
-                      os.path.join(self.INPUT_FOLDER, new_file))
-            item.local_file = new_file
-            item.name = new_name
+            if input(f'Rename {item.local_file}\n    to {new_name} ? (Y/n): ') != 'n':
+                os.rename(os.path.join(self.INPUT_FOLDER, item.local_file),
+                          os.path.join(self.INPUT_FOLDER, new_file))
+                item.local_file = new_file
+                item.name = new_name
 
     def discoverSubtitles(self, item):
         for file in os.listdir(self.TEMP_FOLDER):
@@ -95,10 +96,10 @@ class Subtitler:
         print(f'-- Getting subtitles for {item.name} --\n'
               f'Subs in file: {item.subs_in_file}\nSubs out file: {item.subs_out_file}')
         if 'fre' not in item.subs_in_file and 'fre' not in item.subs_out_file:
-            if input(">> French subs? (y/n): ") != 'n':
+            if input(">> French subs ? (Y/n): ") != 'n':
                 item.missing_subs_language.append('fre')
         if 'eng' not in item.subs_in_file and 'eng' not in item.subs_out_file:
-            if input(">> English subs? (y/n): ") != 'n':
+            if input(">> English subs ? (Y/n): ") != 'n':
                 item.missing_subs_language.append('eng')
 
         if item.missing_subs_language:
@@ -118,7 +119,7 @@ class Subtitler:
                         os.system(f'""{self.player}" "{os.path.join(self.INPUT_FOLDER, item.local_file)}" '
                                   f'"{os.path.join(self.EXTRACT_FOLDER, new_file)}""')
 
-                        if input(f'>> Is {language} sub correct? (y/n): ') != 'n':
+                        if input(f'>> Is {language} sub correct ? (Y/n): ') != 'n':
                             os.rename(os.path.join(self.EXTRACT_FOLDER, new_file),
                                       os.path.join(self.TEMP_FOLDER, new_file))
                             if language == 'fre':
@@ -236,7 +237,7 @@ class Subtitler:
         with open(info_file, 'w', encoding='utf-8') as f:
             if not (self.last_path and input(f'Save in same directory ? '
                                              f'({os.path.join(self.library_directory, self.last_path)}) '
-                                             f'(y/n): ') == 'y'):
+                                             f'(Y/n): ') != 'n'):
                 self.last_path = input(f'Save in : {self.library_directory}')
 
             f.write(os.path.join(self.library_directory, self.last_path, item.local_file))

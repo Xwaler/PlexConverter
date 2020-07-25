@@ -116,7 +116,7 @@ class Item:
                'Audio channels' in self.reasons
 
     def __repr__(self):
-        return f'{self.name} | {self.reasons}'
+        return f'{self.local_file} | {self.reasons}'
 
     def __eq__(self, other):
         return self.name == other.name and self.reasons == other.reasons
@@ -131,7 +131,7 @@ class LocalItem(Item):
 
         self.local_file = os.path.basename(metadata.path_to_video)
         self.name = self.local_file.rsplit('.', 1)[0]
-        print(f'Found {self.name}')
+        print(f'Found {self.local_file}')
 
         self.getRemotePath()
 
