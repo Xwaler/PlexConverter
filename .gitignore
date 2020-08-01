@@ -2,3 +2,11 @@
 __pycache__/
 venv/
 activate
+config.ini
+INPUT/
+TEMP/
+EXTRACT/
+CONVERTING/
+NORMALIZING/
+SUBBED/
+DONE/

@@ -112,32 +112,36 @@ class PlexFetcher:
     def run(self):
         done = []
         while True:
-            print(f'\n--- Fetching libraries --- ({time.strftime("%X", time.localtime())})')
+            try:
+                print(f'\n--- Fetching libraries --- ({time.strftime("%X", time.localtime())})')
 
-            for library in self.getLibraries():
-                print(f'Library {library.name}: ', end='', flush=True)
+                for library in self.getLibraries():
+                    print(f'Library {library.name}: ', end='', flush=True)
 
-                pending_items, count_items = self.getPendingItems(library)
-                items = [item for item in pending_items
-                         if item not in done and self.notDownloaded(item)]
-                size = len(items)
-                i = 0
+                    pending_items, count_items = self.getPendingItems(library)
+                    items = [item for item in pending_items
+                             if item not in done and self.notDownloaded(item)]
+                    size = len(items)
+                    i = 0
 
-                print(f'{len(pending_items)} pending, {count_items} total')
-                for item in items:
-                    print(f'Entry {i + 1}/{size}\n{item}')
+                    print(f'{len(pending_items)} pending, {count_items} total')
+                    for item in items:
+                        print(f'Entry {i + 1}/{size}\n{item}')
 
-                    while self.folderFull():
-                        time.sleep(1)
+                        while self.folderFull():
+                            time.sleep(1)
 
-                    while self.notDownloaded(item):
-                        self.download(item)
+                        while self.notDownloaded(item):
+                            self.download(item)
 
-                    done.append(item)
-                    i += 1
-                    print('', end='\n')
+                        done.append(item)
+                        i += 1
+                        print('', end='\n')
 
-            time.sleep(150)
+            except Exception as e:
+                print(f'Librairy updating ({e}), retying soon...')
+
+            time.sleep(600)
 
 
 if __name__ == '__main__':

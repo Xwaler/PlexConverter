@@ -1,6 +1,5 @@
 #!/bin/sh
 
-cd ~/PlexConverter
 SESSION='PlexConverter'
 SESSIONEXISTS=$(tmux ls | grep $SESSION)
 
@@ -22,4 +21,3 @@ if [ "$SESSIONEXISTS" = "" ]; then
 
   tmux select-pane -t $SESSION -R
 fi
-tmux attach -t $SESSION
