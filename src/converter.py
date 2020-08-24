@@ -131,16 +131,18 @@ class PlexConverter:
                         self.normalize(item)
                         self.upload(item)
 
-                for item in normalizing:
-                    print(f'\n{item}')
-                    self.normalize(item)
-                    self.upload(item)
-
-                for item in converting:
-                    if item.needVideoConvert():
+                if normalizing:
+                    for item in normalizing:
                         print(f'\n{item}')
-                        self.convert(item)
-                        break
+                        self.normalize(item)
+                        self.upload(item)
+
+                else:
+                    for item in converting:
+                        if item.needVideoConvert():
+                            print(f'\n{item}')
+                            self.convert(item)
+                            break
 
             else:
                 if not waiting:

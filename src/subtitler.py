@@ -60,7 +60,7 @@ class Subtitler:
                 break
 
         if not year:
-        	return
+            return
 
         new_name = words[0]
         correct = False
@@ -73,7 +73,7 @@ class Subtitler:
                 new_name += f" {word}"
 
         if not correct:
-        	return
+            return
         new_file = f'{new_name}.{extension}'
 
         if item.local_file != new_name:
@@ -85,10 +85,16 @@ class Subtitler:
 
     def discoverSubtitles(self, item):
         for file in os.listdir(self.TEMP_FOLDER):
-            if 'eng' not in item.subs_in_file and 'eng' not in item.subs_out_file and file == f'{item.name}.eng.srt':
+            if 'eng' not in item.subs_in_file and 'eng' not in item.subs_out_file and file.lower() in [
+                        f'{item.name}.eng.srt'.lower(),
+                        f'{item.name}.en.srt'.lower()
+                    ]:
                 self.convertSub(file, FOLDER=self.TEMP_FOLDER)
                 item.subs_out_file['eng'] = file
-            elif 'fre' not in item.subs_in_file and 'fre' not in item.subs_out_file and file == f'{item.name}.fre.srt':
+            elif 'fre' not in item.subs_in_file and 'fre' not in item.subs_out_file and file.lower() in [
+                        f'{item.name}.fre.srt'.lower(),
+                        f'{item.name}.fr.srt'.lower()
+                    ]:
                 self.convertSub(file, FOLDER=self.TEMP_FOLDER)
                 item.subs_out_file['fre'] = file
 
