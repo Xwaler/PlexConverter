@@ -76,8 +76,8 @@ class Subtitler:
             return
         new_file = f'{new_name}.{extension}'
 
-        if item.local_file != new_name:
-            if input(f'Rename {item.local_file}\n    to {new_name} ? (Y/n): ') != 'n':
+        if item.local_file != new_file:
+            if input(f'Rename {item.local_file}\n    to {new_file} ? (Y/n): ') != 'n':
                 os.rename(os.path.join(self.INPUT_FOLDER, item.local_file),
                           os.path.join(self.INPUT_FOLDER, new_file))
                 item.local_file = new_file

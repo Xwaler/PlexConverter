@@ -166,7 +166,7 @@ class LocalItem(Item):
     def getSubFromYify(self):
         print("Getting missing subtitles from Yify... ", end='')
 
-        site = "http://www.yifysubtitles.com"
+        site = "http://www.yifysubtitles.org"
         search_name = self.name.replace('(', '').replace(')', '').lower()
 
         page = get(site + "/search?q=" + search_name[:-5])
