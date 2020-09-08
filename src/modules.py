@@ -1,5 +1,6 @@
 import os
 import platform
+import time
 from configparser import ConfigParser
 from difflib import SequenceMatcher
 
@@ -44,7 +45,7 @@ def getPendingItems(folder):
     for f in files:
         path = os.path.join(folder, f)
         while has_handle(path):
-            pass
+            time.sleep(1)
         items.append(LocalItem(FFProbe(path)))
     return sorted(items, key=lambda x: x.name)
 
@@ -55,7 +56,7 @@ def getNewItems(folder, items):
     for f in files:
         path = os.path.join(folder, f)
         while has_handle(path):
-            pass
+            time.sleep(1)
         items.append(LocalItem(FFProbe(path)))
     items.sort(key=lambda x: x.name)
 
