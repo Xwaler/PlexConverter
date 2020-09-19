@@ -99,7 +99,7 @@ class Subtitler:
                 item.subs_out_file['fre'] = file
 
     def getSubtitles(self, item):
-        print(f'-- Getting subtitles for {item.name} --\n'
+        print(f'--- Getting subtitles ---\n'
               f'Subs in file: {item.subs_in_file}\nSubs out file: {item.subs_out_file}')
         if 'fre' not in item.subs_in_file and 'fre' not in item.subs_out_file:
             if input(">> French subs ? (Y/n): ") != 'n':
@@ -194,7 +194,7 @@ class Subtitler:
         return True
 
     def mux(self, item):
-        print(f'--- Muxing {item.name} ---')
+        print(f'--- Muxing ---')
         input_path = os.path.join(self.INPUT_FOLDER, item.local_file)
         output_file = item.name + '.mkv'
         output_path = os.path.join(self.TEMP_FOLDER, output_file)
@@ -240,10 +240,10 @@ class Subtitler:
         if not (self.last_path and input(f'>> Save in same directory ? '
                                          f'({os.path.join(self.library_directory, self.last_path)}) '
                                          f'(Y/n): ') != 'n'):
-                self.last_path = input(f'>> Save in : {self.library_directory}')
+            self.last_path = input(f'>> Save in : {self.library_directory}')
 
     def upload(self, item):
-        print(f'--- Uploading {item.name} ---')
+        print(f'--- Uploading ---')
 
         info_file = f'{os.path.join(self.TEMP_FOLDER, item.name)}.info'
         with open(info_file, 'w', encoding='utf-8') as f:
@@ -277,7 +277,6 @@ class Subtitler:
     def run(self):
         items = []
         noSubOnline = []
-        selected = None
 
         while True:
             for item in getPendingItems(self.SUBBED_FOLDER):
@@ -298,22 +297,21 @@ class Subtitler:
                           f'({"V" if item.needVideoConvert() else "-"}{"A" if item.needAudioConvert() else "-"}) '
                           f'{item.local_file}')
                 if len(items) > 1:
-                    i = -1
-                    while not ((isinstance(i, int) and 0 <= i < len(priority)) or i == ''):
+                    i, selected = None, None
+                    while not selected:
                         try:
                             i = input('>> ')
                             selected = priority[int(i)]
                         except ValueError:
                             if i == '':
                                 selected = priority[0]
-                                break
                 else:
                     print('>> auto-selecting only file')
                     selected = priority[0]
                 self.rename(selected)
 
                 if selected not in noSubOnline:
-                    print(f'\n{selected}')
+                    print(f'--> {selected}')
 
                 self.discoverSubtitles(selected)
                 if selected not in noSubOnline:
@@ -321,7 +319,7 @@ class Subtitler:
 
                 if self.requiredSub(selected):
                     if selected in noSubOnline:
-                        print(f'\n{selected}')
+                        print(f'--> {selected}')
                         noSubOnline.remove(selected)
 
                     self.ask_path()
