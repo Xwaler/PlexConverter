@@ -1,6 +1,5 @@
 import os
 import platform
-import time
 from configparser import ConfigParser
 from difflib import SequenceMatcher
 
@@ -27,38 +26,44 @@ def escape(string):
     return string
 
 
-def has_handle(path):
-    fpath = os.path.abspath(path)
+def has_handle(paths):
+    fpaths = {os.path.abspath(path): i for i, path in enumerate(paths)}
+    kpaths = fpaths.keys()
+    handles = [False] * len(fpaths)
     for proc in psutil.process_iter():
         try:
-            for item in proc.open_files():
-                if fpath == item.path:
-                    return True
-        except Exception as _:
+            of = set(p.path for p in proc.open_files())
+        except psutil.AccessDenied:
             pass
-    return False
+        else:
+            for inter in kpaths & of:
+                handles[fpaths[inter]] = True
+    return handles
 
 
 def getPendingItems(folder):
     files = os.listdir(folder)
     items = []
-    for f in files:
-        path = os.path.join(folder, f)
-        while has_handle(path):
-            time.sleep(1)
-        items.append(LocalItem(FFProbe(path)))
-    return sorted(items, key=lambda x: x.name)
+    if files:
+        print('Discovering files...')
+        paths = [os.path.join(folder, f) for f in files]
+        handles = has_handle(paths)
+        for path in [path for i, path in enumerate(paths) if not handles[i]]:
+            items.append(LocalItem(FFProbe(path)))
+        return sorted(items, key=lambda x: x.name)
+    return items
 
 
 def getNewItems(folder, items):
     files = [file for file in os.listdir(folder) if file not in [item.local_file for item in items]]
+    if files:
+        print('Discovering new files...')
+        paths = [os.path.join(folder, f) for f in files]
+        handles = has_handle(paths)
 
-    for f in files:
-        path = os.path.join(folder, f)
-        while has_handle(path):
-            time.sleep(1)
-        items.append(LocalItem(FFProbe(path)))
-    items.sort(key=lambda x: x.name)
+        for path in [path for i, path in enumerate(paths) if not handles[i]]:
+            items.append(LocalItem(FFProbe(path)))
+        items.sort(key=lambda x: x.name)
 
 
 class Item:

@@ -289,7 +289,24 @@ class Subtitler:
                 time.sleep(1)
                 getNewItems(self.INPUT_FOLDER, items)
 
-            for item in items[:]:
+            while items:
+                print('\nPlease select next file to process:')
+                priority = sorted(items, key=lambda x: (x.needVideoConvert(), x.needAudioConvert(), x.local_file))
+                for i, item in enumerate(priority):
+                    print(f'{i:3d}: '
+                          f'({"V" if item.needVideoConvert() else "-"}{"A" if item.needAudioConvert() else "-"}) '
+                          f'{item.local_file}')
+                if len(items) > 1:
+                    i = -1
+                    while not (isinstance(i, int) and 0 <= i < len(priority)):
+                        try:
+                            i = int(input('>> '))
+                        except Exception as _:
+                            pass
+                    item = priority[i]
+                else:
+                    print('>> auto-selecting only file')
+                    item = items[0]
                 self.rename(item)
 
                 if item not in noSubOnline:
