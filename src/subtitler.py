@@ -277,6 +277,7 @@ class Subtitler:
     def run(self):
         items = []
         noSubOnline = []
+        selected = None
 
         while True:
             for item in getPendingItems(self.SUBBED_FOLDER):
@@ -298,41 +299,43 @@ class Subtitler:
                           f'{item.local_file}')
                 if len(items) > 1:
                     i = -1
-                    while not (isinstance(i, int) and 0 <= i < len(priority)):
+                    while not ((isinstance(i, int) and 0 <= i < len(priority)) or i == ''):
                         try:
-                            i = int(input('>> '))
-                        except Exception as _:
-                            pass
-                    item = priority[i]
+                            i = input('>> ')
+                            selected = priority[int(i)]
+                        except ValueError:
+                            if i == '':
+                                selected = priority[0]
+                                break
                 else:
                     print('>> auto-selecting only file')
-                    item = items[0]
-                self.rename(item)
+                    selected = priority[0]
+                self.rename(selected)
 
-                if item not in noSubOnline:
-                    print(f'\n{item}')
+                if selected not in noSubOnline:
+                    print(f'\n{selected}')
 
-                self.discoverSubtitles(item)
-                if item not in noSubOnline:
-                    self.getSubtitles(item)
+                self.discoverSubtitles(selected)
+                if selected not in noSubOnline:
+                    self.getSubtitles(selected)
 
-                if self.requiredSub(item):
-                    if item in noSubOnline:
-                        print(f'\n{item}')
-                        noSubOnline.remove(item)
+                if self.requiredSub(selected):
+                    if selected in noSubOnline:
+                        print(f'\n{selected}')
+                        noSubOnline.remove(selected)
 
                     self.ask_path()
-                    self.mux(item)
+                    self.mux(selected)
                     if self.upload_after:
-                        self.upload(item)
+                        self.upload(selected)
                     else:
-                        self.prepareForConvertion(item)
-                    items.remove(item)
+                        self.prepareForConvertion(selected)
+                    items.remove(selected)
 
                 else:
-                    if item not in noSubOnline:
-                        noSubOnline.append(item)
-                        print(f'Missing subtitles for {item.name}')
+                    if selected not in noSubOnline:
+                        noSubOnline.append(selected)
+                        print(f'Missing subtitles for {selected.local_file}')
 
             time.sleep(1)
 
