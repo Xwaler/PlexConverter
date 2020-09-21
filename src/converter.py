@@ -43,8 +43,8 @@ class PlexConverter:
 
         if item.needVideoConvert():
             command = f'ffmpeg -v warning -stats -i "{input_path}" -movflags fastart -map 0 ' \
-                      f'-pix_fmt yuv420p -filter:v scale={self.max_video_width}:-2 ' \
-                      f'-sws_flags lanczos {video_options} -profile:v high -level:v 4.1 -qmin 16 ' \
+                      f'-pix_fmt yuv420p -vf scale={self.max_video_width}:-2:flags=lanczos ' \
+                      f'{video_options} -profile:v high -level:v 4.1 -qmin 16 ' \
                       f'-b:v {self.avg_bitrate}k -maxrate:v {self.max_bitrate}k -bufsize {2 * self.avg_bitrate}k ' \
                       f'-c:a aac -ac 2 -c:s srt "{output_path}"'
 
