@@ -45,7 +45,6 @@ def getPendingItems(folder):
     files = os.listdir(folder)
     items = []
     if files:
-        print('Discovering files...')
         paths = [os.path.join(folder, f) for f in files]
         handles = has_handle(paths)
         for path in [path for i, path in enumerate(paths) if not handles[i]]:
@@ -57,7 +56,6 @@ def getPendingItems(folder):
 def getNewItems(folder, items):
     files = [file for file in os.listdir(folder) if file not in [item.local_file for item in items]]
     if files:
-        print('Discovering new files...')
         paths = [os.path.join(folder, f) for f in files]
         handles = has_handle(paths)
 
