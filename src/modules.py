@@ -157,6 +157,7 @@ class LocalItem(Item):
         self.max_id = max([int(stream.index) for stream in metadata.streams])
         self.audio_languages = {audio.index: audio.language() for audio in metadata.audio}
         self.missing_subs_language = []
+        self.missing_subs_online = False
         self.french_links = []
         self.english_links = []
 

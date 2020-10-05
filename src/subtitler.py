@@ -276,7 +276,6 @@ class Subtitler:
 
     def run(self):
         items = []
-        noSubOnline = []
 
         while True:
             for item in getPendingItems(self.SUBBED_FOLDER):
@@ -289,53 +288,47 @@ class Subtitler:
                 time.sleep(1)
                 getNewItems(self.INPUT_FOLDER, items)
 
-            while items:
-                print('\nPlease select next file to process:')
-                priority = sorted(items, key=lambda x: (x.needVideoConvert(), x.needAudioConvert(), x.local_file))
-                for i, item in enumerate(priority):
-                    print(f'{i:3d}: '
-                          f'({"V" if item.needVideoConvert() else "-"}{"A" if item.needAudioConvert() else "-"}) '
-                          f'{item.local_file}')
-                if len(items) > 1:
-                    i, selected = None, None
-                    while not selected:
-                        try:
-                            i = input('>> ')
-                            selected = priority[int(i)]
-                        except ValueError:
-                            if i == '':
-                                selected = priority[0]
+            print('\nPlease select next file to process:')
+            priority = sorted(items, key=lambda x: (x.missing_subs_online, x.needVideoConvert(),
+                                                    x.needAudioConvert(), x.local_file))
+            for i, item in enumerate(priority):
+                print(f'{i:3d}: ('
+                      f'{"S" if item.missing_subs_online else "-"}'
+                      f'{"V" if item.needVideoConvert() else "-"}'
+                      f'{"A" if item.needAudioConvert() else "-"}'
+                      f') {item.local_file}')
+            print(f'Options: [0...{len(priority)-1}] | reload')
+            i, selected, reload = None, None, False
+            while not (selected or reload):
+                try:
+                    i = input('>> ')
+                    selected = priority[int(i)]
+                except ValueError:
+                    if i == '':
+                        selected = priority[0]
+                    elif i == 'reload':
+                        reload = True
+            if reload:
+                continue
+
+            self.rename(selected)
+            print(f'--> {selected}')
+
+            self.discoverSubtitles(selected)
+            self.getSubtitles(selected)
+
+            if self.requiredSub(selected):
+                self.ask_path()
+                self.mux(selected)
+                if self.upload_after:
+                    self.upload(selected)
                 else:
-                    print('>> auto-selecting only file')
-                    selected = priority[0]
-                self.rename(selected)
+                    self.prepareForConvertion(selected)
+                items.remove(selected)
 
-                if selected not in noSubOnline:
-                    print(f'--> {selected}')
-
-                self.discoverSubtitles(selected)
-                if selected not in noSubOnline:
-                    self.getSubtitles(selected)
-
-                if self.requiredSub(selected):
-                    if selected in noSubOnline:
-                        print(f'--> {selected}')
-                        noSubOnline.remove(selected)
-
-                    self.ask_path()
-                    self.mux(selected)
-                    if self.upload_after:
-                        self.upload(selected)
-                    else:
-                        self.prepareForConvertion(selected)
-                    items.remove(selected)
-
-                else:
-                    if selected not in noSubOnline:
-                        noSubOnline.append(selected)
-                        print(f'Missing subtitles for {selected.local_file}')
-
-            time.sleep(1)
+            else:
+                selected.missing_subs_online = True
+                print(f'Missing subtitles for {selected.local_file}')
 
 
 if __name__ == '__main__':
