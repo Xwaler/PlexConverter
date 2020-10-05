@@ -58,7 +58,6 @@ def getNewItems(folder, items):
     if files:
         paths = [os.path.join(folder, f) for f in files]
         handles = has_handle(paths)
-
         for path in [path for i, path in enumerate(paths) if not handles[i]]:
             items.append(LocalItem(FFProbe(path)))
         items.sort(key=lambda x: x.name)
