@@ -101,6 +101,7 @@ class Subtitler:
     def getSubtitles(self, item):
         print(f'--- Getting subtitles ---\n'
               f'Subs in file: {item.subs_in_file}\nSubs out file: {item.subs_out_file}')
+        item.missing_subs_language = []
         if 'fre' not in item.subs_in_file and 'fre' not in item.subs_out_file:
             if input(">> French subs ? (Y/n): ") != 'n':
                 item.missing_subs_language.append('fre')
@@ -199,7 +200,7 @@ class Subtitler:
         output_file = item.name + '.mkv'
         output_path = os.path.join(self.TEMP_FOLDER, output_file)
 
-        command = f'ffmpeg -v warning -stats -i "{input_path}" '
+        command = f'ffmpeg -v warning -stats -fflags +genpts -i "{input_path}" '
 
         for sub in item.subs_out_file.values():
             command += f'-i {escape(os.path.join(self.TEMP_FOLDER, sub))} '
