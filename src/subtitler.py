@@ -35,6 +35,7 @@ class Subtitler:
         self.library_directory = config["PLEX"]["LIBRARY_DIRECTORY"]
 
         self.player = config['SUBTITLER']['PLAYER']
+        self.player_sub_option = config['SUBTITLER']['PLAYER_SUB_OPTION']
         self.upload_after = config['SUBTITLER'].getboolean('UPLOAD_AFTER')
         self.upload_ssh = f'{config["SUBTITLER"]["USER"]}@{config["SUBTITLER"]["URL"]}'
         self.upload_dir = config['SUBTITLER']['DIRECTORY']
@@ -123,8 +124,8 @@ class Subtitler:
                                   os.path.join(self.EXTRACT_FOLDER, new_file))
                         self.convertSub(new_file, FOLDER=self.EXTRACT_FOLDER)
 
-                        os.system(f'""{self.player}" "{os.path.join(self.INPUT_FOLDER, item.local_file)}" '
-                                  f'"{os.path.join(self.EXTRACT_FOLDER, new_file)}""')
+                        os.system(f'"{self.player}" "{os.path.join(self.INPUT_FOLDER, item.local_file)}" '
+                                  f'{self.player_sub_option} "{os.path.join(self.EXTRACT_FOLDER, new_file)}"')
 
                         if input(f'>> Is {language} sub correct ? (Y/n): ') != 'n':
                             os.rename(os.path.join(self.EXTRACT_FOLDER, new_file),
