@@ -46,19 +46,19 @@ class PlexFetcher:
                     failed = True
                 time.sleep(3)
 
-    def getLibraries(self):
+    def get_libraries(self):
         response = self.get_wrapper(
             f'{self.plex_url}/library/sections',
         )
-        librairies = parse(response.content)['MediaContainer']['Directory']
-        librairies = [Library(library) for library in librairies]
-        librairies = sorted(librairies, key=lambda x: x.id)
+        libraries = parse(response.content)['MediaContainer']['Directory']
+        libraries = [Library(library) for library in libraries]
+        libraries = sorted(libraries, key=lambda x: x.id)
 
-        return librairies
+        return libraries
 
-    def getItems(self, librairy):
+    def get_items(self, library):
         response = self.get_wrapper(
-            f'{self.plex_url}/library/sections/{librairy.id}/allLeaves'
+            f'{self.plex_url}/library/sections/{library.id}/allLeaves'
         )
         items = parse(response.content)['MediaContainer']['Video']
 
@@ -81,8 +81,8 @@ class PlexFetcher:
 
         return parsed_items
 
-    def getPendingItems(self, library):
-        all_items = self.getItems(library)
+    def get_pending_items(self, library):
+        all_items = self.get_items(library)
         pending_items = [item for item in all_items if item.reasons]
         return pending_items, len(all_items)
 
@@ -103,10 +103,10 @@ class PlexFetcher:
             time.sleep(30)
             self.download(item)
 
-    def folderFull(self):
+    def folder_is_full(self):
         return sum(f.endswith('.info') for f in os.listdir(self.TEMP_FOLDER)) >= 2
 
-    def notDownloaded(self, item):
+    def not_downloaded(self, item):
         return not os.path.exists(os.path.join(self.TEMP_FOLDER, f'{item.remote_file.rsplit(".", 1)[0]}.info'))
 
     def run(self):
@@ -115,12 +115,12 @@ class PlexFetcher:
             try:
                 print(f'\n--- Fetching libraries --- ({time.strftime("%X", time.localtime())})')
 
-                for library in self.getLibraries():
+                for library in self.get_libraries():
                     print(f'Library {library.name}: ', end='', flush=True)
 
-                    pending_items, count_items = self.getPendingItems(library)
+                    pending_items, count_items = self.get_pending_items(library)
                     items = [item for item in pending_items
-                             if item not in done and self.notDownloaded(item)]
+                             if item not in done and self.not_downloaded(item)]
                     size = len(items)
                     i = 0
 
@@ -128,10 +128,10 @@ class PlexFetcher:
                     for item in items:
                         print(f'Entry {i + 1}/{size}\n{item}')
 
-                        while self.folderFull():
+                        while self.folder_is_full():
                             time.sleep(1)
 
-                        while self.notDownloaded(item):
+                        while self.not_downloaded(item):
                             self.download(item)
 
                         done.append(item)
@@ -139,7 +139,7 @@ class PlexFetcher:
                         print('', end='\n')
 
             except Exception as e:
-                print(f'Librairy updating ({e}), retying soon...')
+                print(f'Library updating ({e}), retying soon...')
 
             time.sleep(600)
 

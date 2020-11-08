@@ -41,7 +41,7 @@ def has_handle(paths):
     return handles
 
 
-def getPendingItems(folder):
+def get_pending_items(folder):
     files = os.listdir(folder)
     items = []
     if files:
@@ -53,7 +53,7 @@ def getPendingItems(folder):
     return items
 
 
-def getNewItems(folder, items):
+def get_new_items(folder, items):
     files = [file for file in os.listdir(folder) if file not in [item.local_file for item in items]]
     if files:
         paths = [os.path.join(folder, f) for f in files]
@@ -80,7 +80,7 @@ class Item:
         self.container = None
         self.reasons = {}
 
-    def getReasons(self):
+    def get_reasons(self):
         if self.video_codec != 'h264' or self.video_profile != 'high':
             self.reasons['Video codec'] = {'Codec': self.video_codec,
                                            'Profile': self.video_profile}
@@ -91,7 +91,7 @@ class Item:
             self.reasons['Audio codec'] = {'Codec': self.audio_codec,
                                            'Profile': self.audio_profile}
 
-        if self.audio_channels != '2':
+        if self.audio_channels not in ('1', '2'):
             self.reasons['Audio channels'] = self.audio_channels
 
         if self.bitrate > MAX_BITRATE:
@@ -108,13 +108,13 @@ class Item:
                 int(self.framerate[:-1]) > 30):
             self.reasons['Framerate'] = self.framerate
 
-    def needVideoConvert(self):
+    def need_video_convert(self):
         return 'Video codec' in self.reasons or \
                'High bitrate' in self.reasons or \
                'Framerate' in self.reasons or \
                'Low resolution' in self.reasons
 
-    def needAudioConvert(self):
+    def need_audio_convert(self):
         return 'Audio codec' in self.reasons or \
                'Audio channels' in self.reasons
 
@@ -136,7 +136,7 @@ class LocalItem(Item):
         self.name = self.local_file.rsplit('.', 1)[0]
         print(f'Found {self.local_file}')
 
-        self.getRemotePath()
+        self.get_remote_path()
 
         self.video_codec = video.codec_name
         self.video_profile = video.profile.lower()
@@ -158,16 +158,16 @@ class LocalItem(Item):
         self.french_links = []
         self.english_links = []
 
-        self.getReasons()
+        self.get_reasons()
 
-    def getRemotePath(self):
+    def get_remote_path(self):
         for file in os.listdir(TEMP_FOLDER):
             if file == self.name + '.info':
                 self.remote_path = open(os.path.join(TEMP_FOLDER, file), 'r', encoding='utf-8').readline()
                 self.remote_file = os.path.basename(self.remote_path)
                 return
 
-    def getSubFromYify(self):
+    def get_sub_from_yify(self):
         print("Getting missing subtitles from Yify... ", end='')
 
         site = "http://www.yifysubtitles.org"
@@ -213,7 +213,7 @@ class LocalItem(Item):
                         else:
                             self.english_links.append(link)
 
-    def getSubFromPodnapisi(self):
+    def get_sub_from_podnapisi(self):
         print("Getting missing subtitles from podnapisi... ", end='')
 
         site = "http://www.podnapisi.net"
@@ -226,34 +226,24 @@ class LocalItem(Item):
         soup = BeautifulSoup(page.text, "html.parser")
         movies = soup.find_all("a", attrs={'class': "movie_item"})
 
-        url = None
-        for movie in movies:
-            if SequenceMatcher(
-                    None,
-                    movie.find('div', attrs={'class': 'title'}).find('span').find('span').string.lower(),
-                    self.name.lower()
-            ).ratio() > .8:
-                url = movie['href'].split('/moviedb/entry')[1]
-                break
-
-        if url is None:
-            page = s.get(site + "/moviedb/search/?keywords=" + self.name.split()[0],
-                         headers=headers)
-            soup = BeautifulSoup(page.text, "html.parser")
-            movies = soup.find_all("a", attrs={'class': "movie_item"})
-
+        def get_url():
             for movie in movies:
                 if SequenceMatcher(
                         None,
                         movie.find('div', attrs={'class': 'title'}).find('span').find('span').string.lower(),
                         self.name.lower()
                 ).ratio() > .8:
-                    url = movie['href'].split('/moviedb/entry')[1]
-                    break
+                    return movie['href'].split('/moviedb/entry')[1]
+
+        url = get_url()
+        if url is None:
+            page = s.get(site + "/moviedb/search/?keywords=" + self.name.split()[0], headers=headers)
+            soup = BeautifulSoup(page.text, "html.parser")
+            movies = soup.find_all("a", attrs={'class': "movie_item"})
+            url = get_url()
 
         if url is None:
             print('not found')
-
         else:
             print('found')
 
@@ -294,7 +284,7 @@ class RemoteItem(Item):
         self.bitrate = int(self.size * 8 / self.duration)
         self.framerate = media_info['@videoFrameRate']
         self.container = media_info['@container']
-        self.getReasons()
+        self.get_reasons()
 
 
 class Library:

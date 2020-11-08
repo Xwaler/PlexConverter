@@ -4,7 +4,7 @@ import time
 from configparser import ConfigParser
 from subprocess import check_call, CalledProcessError
 
-from modules import escape, getPendingItems, scp_option
+from modules import get_pending_items, scp_option
 
 
 class PlexConverter:
@@ -40,20 +40,25 @@ class PlexConverter:
         nvenc = 'CUDA' in os.environ['PATH']
         video_options = '-c:v h264_nvenc -preset slow -rc:v vbr_hq -cq:v 19' if nvenc \
             else '-c:v libx264 -preset slow'
+        try:
+            audio_channels = max(int(item.audio_channels), 2)
+        except ValueError:
+            audio_channels = 2
 
-        if item.needVideoConvert():
-            command = f'ffmpeg -v warning -stats -i "{input_path}" -movflags fastart -map 0 ' \
+        if item.need_video_convert():
+            command = f'ffmpeg -v warning -stats -fflags +genpts -i "{input_path}" -movflags fastart -map 0 ' \
                       f'-pix_fmt yuv420p -vf scale={self.max_video_width}:-2:flags=lanczos ' \
                       f'{video_options} -profile:v high -level:v 4.1 -qmin 16 ' \
                       f'-b:v {self.avg_bitrate}k -maxrate:v {self.max_bitrate}k -bufsize {2 * self.avg_bitrate}k ' \
-                      f'-c:a aac -ac 2 -c:s srt "{output_path}"'
+                      f'-c:a {f"aac -ac {audio_channels}" if item.need_audio_convert() else "copy"} ' \
+                      f'-c:s srt "{output_path}"'
 
-        elif item.needAudioConvert():
-            command = f'ffmpeg -v warning -stats -i "{input_path}" -movflags fastart -map 0 ' \
-                      f'-c:v copy -c:a aac -ac 2 -c:s srt "{output_path}"'
+        elif item.need_audio_convert():
+            command = f'ffmpeg -v warning -stats -fflags +genpts -i "{input_path}" -movflags fastart -map 0 ' \
+                      f'-c:v copy -c:a aac -ac {audio_channels} -c:s srt "{output_path}"'
 
         else:
-            command = f'ffmpeg -v warning -stats -i "{input_path}" -movflags fastart -map 0 ' \
+            command = f'ffmpeg -v warning -stats -fflags +genpts -i "{input_path}" -movflags fastart -map 0 ' \
                       f'-c:v copy -c:a copy -c:s srt "{output_path}"'
 
         try:
@@ -64,7 +69,7 @@ class PlexConverter:
             os.remove(input_path)
 
         except CalledProcessError:
-            print('Convertion failed !')
+            print('Conversion failed !')
             time.sleep(30)
             self.convert(item)
 
@@ -113,9 +118,9 @@ class PlexConverter:
     def run(self):
         waiting = False
         while True:
-            converting = getPendingItems(self.CONVERTING_FOLDER)
-            normalizing = getPendingItems(self.NORMALIZING_FOLDER)
-            uploading = getPendingItems(self.OUTPUT_FOLDER)
+            converting = get_pending_items(self.CONVERTING_FOLDER)
+            normalizing = get_pending_items(self.NORMALIZING_FOLDER)
+            uploading = get_pending_items(self.OUTPUT_FOLDER)
 
             if converting or normalizing or uploading:
                 waiting = False
@@ -125,7 +130,7 @@ class PlexConverter:
                     self.upload(item)
 
                 for item in converting:
-                    if not item.needVideoConvert():
+                    if not item.need_video_convert():
                         print(f'\n{item}')
                         self.convert(item)
                         self.normalize(item)
@@ -139,7 +144,7 @@ class PlexConverter:
 
                 else:
                     for item in converting:
-                        if item.needVideoConvert():
+                        if item.need_video_convert():
                             print(f'\n{item}')
                             self.convert(item)
                             break

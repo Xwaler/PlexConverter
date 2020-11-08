@@ -7,7 +7,7 @@ from subprocess import check_call, CalledProcessError
 
 from requests import get
 
-from modules import escape, getPendingItems, getNewItems, scp_option
+from modules import escape, get_pending_items, get_new_items, scp_option
 
 
 class Subtitler:
@@ -84,22 +84,22 @@ class Subtitler:
                 item.local_file = new_file
                 item.name = new_name
 
-    def discoverSubtitles(self, item):
+    def discover_subtitles(self, item):
         for file in os.listdir(self.TEMP_FOLDER):
             if 'eng' not in item.subs_in_file and 'eng' not in item.subs_out_file and file.lower() in [
-                        f'{item.name}.eng.srt'.lower(),
-                        f'{item.name}.en.srt'.lower()
-                    ]:
-                self.convertSub(file, FOLDER=self.TEMP_FOLDER)
+                f'{item.name}.eng.srt'.lower(),
+                f'{item.name}.en.srt'.lower()
+            ]:
+                self.convert_sub(file, folder=self.TEMP_FOLDER)
                 item.subs_out_file['eng'] = file
             elif 'fre' not in item.subs_in_file and 'fre' not in item.subs_out_file and file.lower() in [
-                        f'{item.name}.fre.srt'.lower(),
-                        f'{item.name}.fr.srt'.lower()
+                f'{item.name}.fre.srt'.lower(),
+                f'{item.name}.fr.srt'.lower()
                     ]:
-                self.convertSub(file, FOLDER=self.TEMP_FOLDER)
+                self.convert_sub(file, folder=self.TEMP_FOLDER)
                 item.subs_out_file['fre'] = file
 
-    def getSubtitles(self, item):
+    def get_subtitles(self, item):
         print(f'--- Getting subtitles ---\n'
               f'Subs in file: {item.subs_in_file}\nSubs out file: {item.subs_out_file}')
         item.missing_subs_language = []
@@ -111,18 +111,18 @@ class Subtitler:
                 item.missing_subs_language.append('eng')
 
         if item.missing_subs_language:
-            item.getSubFromYify()
-            item.getSubFromPodnapisi()
+            item.get_sub_from_yify()
+            item.get_sub_from_podnapisi()
 
             print(f'-- Syncing subtitles for {item.name} --')
             for language in item.missing_subs_language:
                 for link in item.english_links if language == 'eng' else item.french_links:
-                    file = self.downloadSub(link)
+                    file = self.download_sub(link)
                     if file:
                         new_file = f'{item.name}.{language}.srt'
                         os.rename(os.path.join(self.EXTRACT_FOLDER, file),
                                   os.path.join(self.EXTRACT_FOLDER, new_file))
-                        self.convertSub(new_file, FOLDER=self.EXTRACT_FOLDER)
+                        self.convert_sub(new_file, folder=self.EXTRACT_FOLDER)
 
                         os.system(f'"{self.player}" "{os.path.join(self.INPUT_FOLDER, item.local_file)}" '
                                   f'{self.player_sub_option} "{os.path.join(self.EXTRACT_FOLDER, new_file)}"')
@@ -139,7 +139,7 @@ class Subtitler:
                         else:
                             os.remove(os.path.join(self.EXTRACT_FOLDER, new_file))
 
-    def downloadSub(self, link):
+    def download_sub(self, link):
         print(f"Downloading and unzipping {link}")
         with open(os.path.join(self.EXTRACT_FOLDER, 'sub.zip'), "wb") as file:
             response = get(link)
@@ -167,10 +167,10 @@ class Subtitler:
             return srts[0]
 
     @staticmethod
-    def convertSub(file, FOLDER):
+    def convert_sub(file, folder):
         print(f"Converting {file}")
 
-        file_path = os.path.join(FOLDER, file)
+        file_path = os.path.join(folder, file)
 
         f = open(file_path, mode='r', encoding='utf-8', errors='strict')
         try:
@@ -189,7 +189,7 @@ class Subtitler:
             os.rename(file_path + '.tmp', file_path)
 
     @staticmethod
-    def requiredSub(item):
+    def required_sub(item):
         for sub in item.missing_subs_language:
             if sub not in item.subs_out_file:
                 return False
@@ -208,7 +208,7 @@ class Subtitler:
         command += '-map 0 '
         for i in range(1, len(item.subs_out_file) + 1):
             command += f'-map {i} '
-        command += f'-movflags faststart -c:v copy -c:a copy -c:s srt '
+        command += f'-movflags fastart -c:v copy -c:a copy -c:s srt '
         for language in item.subs_out_file.keys():
             item.max_id += 1
             command += f'-metadata:s:{item.max_id} language={language} '
@@ -272,7 +272,7 @@ class Subtitler:
             time.sleep(30)
             self.upload(item)
 
-    def prepareForConvertion(self, item):
+    def prepare_for_conversion(self, item):
         os.rename(os.path.join(self.SUBBED_FOLDER, item.local_file),
                   os.path.join(self.CONVERTING_FOLDER, item.local_file))
 
@@ -280,26 +280,26 @@ class Subtitler:
         items = []
 
         while True:
-            for item in getPendingItems(self.SUBBED_FOLDER):
+            for item in get_pending_items(self.SUBBED_FOLDER):
                 self.upload(item)
 
-            getNewItems(self.INPUT_FOLDER, items)
+            get_new_items(self.INPUT_FOLDER, items)
             if not items:
                 print('\nWaiting for new files...')
             while not items:
                 time.sleep(1)
-                getNewItems(self.INPUT_FOLDER, items)
+                get_new_items(self.INPUT_FOLDER, items)
 
             print('\nPlease select next file to process:')
-            priority = sorted(items, key=lambda x: (x.missing_subs_online, x.needVideoConvert(),
-                                                    x.needAudioConvert(), x.local_file))
+            priority = sorted(items, key=lambda x: (x.missing_subs_online, x.need_video_convert(),
+                                                    x.need_audio_convert(), x.local_file))
             for i, item in enumerate(priority):
                 print(f'{i:3d}: ('
                       f'{"S" if item.missing_subs_online else "-"}'
-                      f'{"V" if item.needVideoConvert() else "-"}'
-                      f'{"A" if item.needAudioConvert() else "-"}'
+                      f'{"V" if item.need_video_convert() else "-"}'
+                      f'{"A" if item.need_audio_convert() else "-"}'
                       f') {item.local_file}')
-            print(f'Options: [0...{len(priority)-1}] | reload')
+            print(f'Options: [0...{len(priority) - 1}] | reload')
             i, selected, reload = None, None, False
             while not (selected or reload):
                 try:
@@ -316,16 +316,16 @@ class Subtitler:
             self.rename(selected)
             print(f'--> {selected}')
 
-            self.discoverSubtitles(selected)
-            self.getSubtitles(selected)
+            self.discover_subtitles(selected)
+            self.get_subtitles(selected)
 
-            if self.requiredSub(selected):
+            if self.required_sub(selected):
                 self.ask_path()
                 self.mux(selected)
                 if self.upload_after:
                     self.upload(selected)
                 else:
-                    self.prepareForConvertion(selected)
+                    self.prepare_for_conversion(selected)
                 items.remove(selected)
 
             else:
