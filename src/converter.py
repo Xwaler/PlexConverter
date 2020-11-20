@@ -41,7 +41,7 @@ class PlexConverter:
         video_options = '-c:v h264_nvenc -preset slow -rc:v vbr_hq -cq:v 19' if nvenc \
             else '-c:v libx264 -preset slow'
         try:
-            audio_channels = max(int(item.audio_channels), 2)
+            audio_channels = min(int(item.audio_channels), 2)
         except ValueError:
             audio_channels = 2
 
