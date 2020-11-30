@@ -62,6 +62,7 @@ class PlexConverter:
                       f'-c:v copy -c:a copy -c:s srt "{output_path}"'
 
         try:
+            print(command)
             check_call(shlex.split(command))
             item.local_file = os.path.basename(output_path)
             os.rename(output_path,
