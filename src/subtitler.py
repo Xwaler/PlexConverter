@@ -247,6 +247,7 @@ class Subtitler:
     def upload(self, item):
         print(f'--- Uploading ---')
 
+        self.ask_path()
         info_file = f'{os.path.join(self.TEMP_FOLDER, item.name)}.info'
         with open(info_file, 'w', encoding='utf-8') as f:
             f.write(os.path.join(self.library_directory, self.last_path, item.local_file))
@@ -320,7 +321,6 @@ class Subtitler:
             self.get_subtitles(selected)
 
             if self.required_sub(selected):
-                self.ask_path()
                 self.mux(selected)
                 if self.upload_after:
                     self.upload(selected)

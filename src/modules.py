@@ -170,10 +170,10 @@ class LocalItem(Item):
     def get_sub_from_yify(self):
         print("Getting missing subtitles from Yify... ", end='')
 
-        site = "http://www.yifysubtitles.org"
+        site = "http://yifysubtitles.org"
         search_name = self.name.replace('(', '').replace(')', '').lower()
 
-        page = get(site + "/search?q=" + search_name[:-5])
+        page = get(site + "/search?q=" + search_name)
         soup = BeautifulSoup(page.text, "html.parser")
         movies = soup.find_all("h3", class_="media-heading")
 
